@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if editing else 'Add New' }} Asset | Asset Management System{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-center mt-4">
+  <div class="card shadow-sm" style="width: 100%; max-width: 800px;">
+    <div class="card-header text-white d-flex align-items-center" style="background-color: #043251;">
+      <!-- Back Button -->
+      <a href="javascript:if(document.referrer){history.back();}else{window.location.href='{{ url_for("main.dashboard") }}';}"
+        class="btn btn-light btn-sm me-2">
+        ← Back
+      </a>
+      
+      <h5 class="mb-0 flex-grow-1 text-center">{{ 'Edit' if editing else 'Add New' }} Asset</h5>
+    </div>
+
+    <div class="card-body">
+      <form method="POST"
+        action="{{ url_for('main.create_asset') if not editing else url_for('main.edit_asset', asset_id=asset_id) }}"
+        autocomplete="off" id="asset-form">
+        {{ form.csrf_token }}
+
+        <!-- Asset Type -->
+        <div class="mb-3">
+          <label for="asset_type" class="form-label">Asset Type</label>
+          <select id="asset_type" name="category" class="form-select">
+            <option value="" disabled selected>Select a type</option>
+            {% for type in types %}
+        <option value="{{ type }}" {% if asset_data.category == type %}selected{% endif %}
+          data-dynamic="{{ 'true' if type not in built_in_types else 'false' }}">
+          {{ type }}
+        </option>
+      {% endfor %}
+
+            <option value="add_new_type">Add New Type</option>
+          </select>
+          <div class="invalid-feedback" id="category-error"></div>
+        </div>
+
+        <!-- New Type Name -->
+        <div class="mb-3" id="new-type-wrapper" hidden>
+          <label for="new-type" class="form-label">New Type Name</label>
+          <input type="text" id="new-type" name="new_type" class="form-control" placeholder="e.g. Scanner">
+          <div class="invalid-feedback" id="new-type-error"></div>
+        </div>
+
+        <!-- Feature Selector -->
+        <div class="mb-3" id="feature-select-wrapper" hidden>
+          <label class="form-label">Select Fields for New Type</label>
+          <div id="available-feature-list" class="border rounded p-2" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+
+        <!-- Create Form Button -->
+        <button type="button" class="btn btn-outline-primary mt-2" id="create-form-btn" hidden>
+          <i class="bi bi-tools me-1"></i> Create Form from Selected Fields
+        </button>
+
+        <!-- Dynamic Fields -->
+        <div id="dynamic-fields"></div>
+        <div id="status-remarks-section" hidden></div>
+
+        <!-- Hidden Fields -->
+        <input type="hidden" name="selected_features" id="selected_features">
+
+        <!-- Submit -->
+        <button type="submit" class="btn w-100 mt-3" id="submit-btn" disabled>
+          <i class="bi bi-save me-1"></i> Save Asset
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.existingAssetData = {{ asset_data | default({}) | tojson | safe }};
+  window.masterFields = {{ master_fields | default([]) | tojson | safe }};
+  window.fieldsToRender = {{ fields_to_render | default([]) | tojson | safe }};
+</script>
+
+{% if not editing %}
+  <script>
+    // 🧹 Clear cached field config to ensure fresh status options on create
+    window.fieldConfigMap = {};
+  </script>
+{% endif %}
+
+<script defer src="{{ url_for('main.serve_assets', filename='bundle.js') }}"></script>
+
+<script>
+  document.addEventListener('keydown', function (event) {
+    // Ignore if typing in an input, textarea, or contenteditable
+    const tag = (event.target.tagName || '').toLowerCase();
+    const isEditable = tag === 'input' || tag === 'textarea' || event.target.isContentEditable;
+
+    if (!isEditable && event.key === 'Backspace') {
+      event.preventDefault();
+      if (document.referrer) {
+        history.back();
+      } else {
+        window.location.href = "{{ url_for('main.dashboard') }}";
+      }
+    }
+  });
+</script>
+
+<script>
+function formatIndianNumber(x) {
+    if (isNaN(x)) return "";
+    const parts = x.toFixed(2).split(".");
+    let integer = parts[0];
+    let lastThree = integer.slice(-3);
+    let otherNumbers = integer.slice(0, -3);
+    if (otherNumbers !== "") {
+        lastThree = "," + lastThree;
+    }
+    return otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree + (parts[1] ? "." + parts[1] : "");
+}
+
+function updateGSTandTotal() {
+    const amountField = document.getElementById("amount");
+    const totalField = document.getElementById("total");
+    const gstFields = document.querySelectorAll("input[id^='gst_']");
+
+    if (!amountField || !totalField) return;
+
+    const rawAmount = parseFloat(amountField.value.replace(/,/g, "")) || 0; // remove commas only
+
+    let totalGST = 0;
+
+    gstFields.forEach(field => {
+        const rate = parseFloat(field.id.replace("gst_", "")); // e.g. gst_18 → 18
+        if (!isNaN(rate)) {
+            const gstValue = (rawAmount * rate) / 100;
+            field.value = formatIndianNumber(gstValue);
+            totalGST += gstValue;
+        }
+    });
+
+    totalField.value = formatIndianNumber(rawAmount + totalGST);
+    amountField.value = formatIndianNumber(rawAmount); // keep amount formatted too
+}
+
+// Attach only to amount
+document.querySelectorAll('input[name="amount"]').forEach(input => {
+  input.addEventListener('input', updateGSTandTotal);
+});
+
+// Make GST fields read-only
+document.querySelectorAll("input[id^='gst_']").forEach(input => {
+  input.readOnly = true;
+});
+
+// Initialize on page load
+updateGSTandTotal();
+</script>
+
+{% endblock %}

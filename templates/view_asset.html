@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}View Asset{% endblock %}
+
+{% block content %}
+<!-- PRINT-FRIENDLY STYLES -->
+<style>
+  @media print {
+    body {
+      background: white !important;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .btn,
+    .card-header,
+    a,
+    nav,  
+    footer {
+      display: none !important;
+    }
+    .card {
+      box-shadow: none !important;
+      border: none !important;
+    }
+    .card-body {
+      color: #043251;
+      padding: 0 !important;
+    }
+    .container-fluid,
+    .row,
+    .col-md-6 {
+      margin: 0 !important;
+      padding: 0 !important;
+      width: 100% !important;
+    }
+    p {
+      margin: 0 0 10px 0;
+    }
+    .text-center.mt-4 {
+      display: none !important;
+    }
+  }
+
+  .btn-back {
+    background-color: #043251;
+    color: white;
+  }
+
+  .btn-back:hover {
+    background-color: #03202a;
+    color: white;
+  }
+
+  .card-header.custom-header {
+    background-color: #043251;
+    color: white;
+  }
+
+  .card-body {
+    color: #043251;
+  }
+</style>
+
+<div class="container-fluid mt-5">
+  <div class="row justify-content-center">  
+    <div class="col-12 col-md-8 col-lg-7 col-xl-6">
+      <div class="card shadow-lg rounded-4">
+        <div class="card-header custom-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 mx-auto text-center w-100">Asset Details</h5>
+          <a href="javascript:history.back()" class="btn btn-sm btn-back position-absolute" style="left: 0rem;">
+            <i class="bi bi-arrow-left"></i> Back
+          </a>
+        </div>
+
+        <div class="card-body px-4 py-3">
+          <div class="row">
+            {% set mid = (view_data | length // 2) + (view_data | length % 2) %}
+
+            <div class="col-md-6">
+              {% for field in view_data[:mid] %}
+                <p>
+                  <strong>{{ field.label }}:</strong>
+                  {% if field.is_currency %}
+                    {{ field.value|inr }}
+                  {% else %}
+                    {{ field.value if field.value is not none and field.value != "" else "—" }}
+                  {% endif %}
+              </p>
+              {% endfor %}
+            </div>
+
+            <div class="col-md-6">
+              {% for field in view_data[mid:] %}
+                <p>
+                  <strong>{{ field.label }}:</strong>
+                  {% if field.is_currency %}
+                    {{ field.value|inr }}
+                  {% else %}
+                    {{ field.value if field.value is not none and field.value != "" else "—" }}
+                  {% endif %}
+                </p>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="text-center mt-4">
+            <div class="d-flex justify-content-center gap-3">
+              <button onclick="window.print()" class="btn btn-secondary">Print</button>
+              <a href="{{ url_for('main.edit_asset', asset_id=asset['_id']) }}" class="btn btn-warning">Edit</a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Backspace') {
+    const active = document.activeElement;
+    const isTypingField =
+      active.tagName === 'INPUT' ||
+      active.tagName === 'TEXTAREA' ||
+      active.isContentEditable;
+    if (!isTypingField) {
+      e.preventDefault();
+      const backBtn = document.querySelector('.btn-back');
+      if (backBtn) { backBtn.click(); } else { history.back(); }
+    }
+  }
+});
+</script>
+{% endblock %}

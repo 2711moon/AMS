@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Login | Asset Management{% endblock %}
+
+{% block head %}
+<style>
+  .title-bar {
+  width: auto; /* No forced width */
+  text-align: center;
+  font-size: 2.5rem;
+  letter-spacing: 1px;
+  font-family:  Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  background: none; /* No background */
+  color: #042351; /* Your chosen font color */
+  padding: 0; /* Remove spacing */
+  margin: 0 auto; /* Center horizontally */
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  display: block; /* No flex layout needed */
+}
+  .subtitle {
+  font-size: 1.06rem;
+  color: #042351;
+  font-weight: 500;
+  margin-top: 0.5rem;
+  font-family: 'Times New Roman', Times, serif;
+  
+}
+
+  .main-flex-box {
+    display: flex;
+    justify-content: center;
+    margin-top: 0rem;
+  }
+
+  .auth-box {
+    background: #fff;
+    min-width: 350px;
+    max-width: 350px;
+    width: 100%;
+    border-radius: 8px;
+  }
+
+  .input-eye-wrapper {
+    position: relative;
+  }
+
+  .input-eye-wrapper i {
+    position: absolute;
+    top: 50%;
+    right: 1rem;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #666;
+  }
+
+  .form-label {
+    font-weight: 500;
+    color: #042351;
+  }
+
+  .btn-primary {
+    background-color: #042351;
+    border: none;
+  }
+
+  .btn-primary:hover {
+    background-color: #063c8c;
+  }
+  
+ body {
+    background: url('/static/9.jpg') no-repeat center center fixed;
+    background-size: cover;
+  }
+  @media (max-width: 600px) {
+    .auth-box {
+      margin: 0 1rem;
+    }
+
+    .title-bar {
+      font-size: 1.5rem;
+      padding: 0.8rem 0;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+    }
+  }
+  
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="title-bar">
+    ASSET INVENTORY MANAGEMENT SYSTEM
+    <div class="subtitle"><em>for EDP team</em></div>
+  </div>
+
+  <div class="main-flex-box">
+    <div class="auth-box shadow p-4 bg-white rounded">
+      <form method="POST" action="{{ url_for('auth.login') }}" onsubmit="return validateLogin()" autocomplete="off">
+        {{ form.csrf_token }}
+
+        <h4 class="mb-4 text-center" style="color:#042351;">Please Login</h4>
+
+        <div class="mb-3">
+          <label class="form-label">Username</label>
+          <input type="text" name="identifier" id="loginIdentifier" class="form-control" required>
+          <div id="usernameError" class="text-danger mt-1" style="display: none;">Username cannot be empty or just spaces.</div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label">Password</label>
+          <div class="input-eye-wrapper">
+            <input type="password" class="form-control pe-5" id="passcode" name="passcode" required autocomplete="new-password">
+            <i class="bi bi-eye" id="customEyeIcon" onmousedown="showPassword()" onmouseup="hidePassword()" onmouseleave="hidePassword()" title="Hold to show password"></i>
+          </div>
+          <div id="passwordError" class="text-danger mt-1" style="display: none;">Password cannot be empty.</div>
+        </div>
+
+        <input type="hidden" name="role" value="admin">
+
+        <button class="btn btn-primary w-100">Login</button>
+      </form>
+    </div>
+  </div>
+  
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function validateLogin() {
+    const usernameInput = document.getElementById('loginIdentifier');
+    const passwordInput = document.getElementById('passcode');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+
+    let isValid = true;
+
+    if (usernameInput.value.trim() === '') {
+      usernameError.style.display = 'block';
+      usernameInput.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      usernameError.style.display = 'none';
+      usernameInput.classList.remove('is-invalid');
+    }
+
+    if (passwordInput.value.trim() === '') {
+      passwordError.style.display = 'block';
+      passwordInput.classList.add('is-invalid');
+      isValid = false;
+    } else {
+      passwordError.style.display = 'none';
+      passwordInput.classList.remove('is-invalid');
+    }
+
+    return isValid;
+  }
+
+  function showPassword() {
+    const input = document.getElementById('passcode');
+    const icon = document.getElementById('customEyeIcon');
+    input.type = 'text';
+    icon.classList.remove('bi-eye');
+    icon.classList.add('bi-eye-slash');
+  }
+
+  function hidePassword() {
+    const input = document.getElementById('passcode');
+    const icon = document.getElementById('customEyeIcon');
+    input.type = 'password';
+    icon.classList.remove('bi-eye-slash');
+    icon.classList.add('bi-eye');
+  }
+</script>
+{% endblock %}

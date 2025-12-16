@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Employee Management System</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #01153a; /* Dark blue */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #logo {
+            max-width: 1000px;
+            transition: opacity 1s ease-out;
+        }
+
+        .fade-out {
+            opacity: 0;
+        }
+        
+    </style>
+</head>
+<body>
+    <img src="{{ url_for('static', filename='kisnarbg2.png') }}" alt="Logo" id="logo">
+
+    <script>
+        setTimeout(() => {
+            document.getElementById('logo').classList.add('fade-out');
+        }, 2000); // Start fade-out before redirect
+
+        setTimeout(() => {
+            window.location.href = "{{ url_for('main.dashboard') }}";
+        }, 2200); // Redirect after 5 seconds
+    </script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"type":"module","scripts":{"build":"rollup -c"},"devDependencies":{"@rollup/plugin-commonjs":"^28.0.6","@rollup/plugin-node-resolve":"^16.0.1","rollup":"^4.46.2"},"dependencies":{"flatpickr":"^4.6.13"}}

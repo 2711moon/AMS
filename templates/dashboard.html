@@ -1,0 +1,846 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+  <div class="card shadow rounded-4 p-4">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+      <h3 class="fw-semibold custom-primary mb-2">My Assets</h3>
+      
+      <div class="d-flex align-items-center gap-2">
+        <a href="{{ url_for('main.create_asset') }}" class="btn btn-outline-secondary">
+          <i class="bi bi-plus-circle me-1"></i> New Asset
+        </a>
+        <div class="dropdown">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-gear"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#changePasswordModal">Change Password</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">Logout</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header">Export</li>
+            <li><a class="dropdown-item" href="{{ url_for('export.export_keka') }}">Export KEKA</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('export.export_excel') }}">Export Excel</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('export.export_db') }}">Export DB</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header">Import</li>
+            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#importExcelModal">Import Excel</a></li>
+            <li><a class="dropdown-item" href="{{ url_for('export.import_db') }}">Import DB</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li class="dropdown-header">Back up</li>
+            <li><a class="dropdown-item" href="{{ url_for('export.manual_backup') }}">Manual Backup</a></li>              
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Import Excel Modal -->
+    <div class="modal fade" id="importExcelModal" tabindex="-1" aria-labelledby="importExcelModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+        <form method="POST" action="{{ url_for('export.import_excel') }}" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="importExcelModalLabel">Import Excel</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="excelFile" class="form-label">Choose Excel File (.xlsx)</label>
+                <input class="form-control" type="file" name="file" id="excelFile" accept=".xlsx" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary">Upload</button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+     <!-- Search + Filter + Sort -->
+    <div class="mb-2">
+      <div class="input-group">
+        <input type="text" id="searchInput" class="form-control" placeholder="Search assets by name, type, etc..." autocomplete="off">
+
+        <div class="btn-group">
+          <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="sortBtn" title="Sort">
+            <i class="bi bi-arrow-down-up"></i>
+          </button>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><a class="dropdown-item sort-option" data-sort="given_date_asc" href="#">Given Date – Oldest First</a></li>
+            <li><a class="dropdown-item sort-option" data-sort="given_date_desc" href="#">Given Date – Newest First</a></li>
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item sort-option" data-sort="purchase_date_asc" href="#">Date of Purchase – Oldest First</a></li>
+            <li><a class="dropdown-item sort-option" data-sort="purchase_date_desc" href="#">Date of Purchase – Newest First</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
+
+    <!-- Show entries -->
+    <div class="d-flex justify-content-between align-items-center mb-0">
+      <div>
+        <select id="entriesSelect" class="form-select form-select-sm text-secondary" style="width: auto; color: #6c757d;">
+          <option value="25" selected>25</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+          <option value="200">200</option>
+          <option value="500">500</option>
+          <option value="1000">1000</option>
+          <option value="2000">2000</option>
+        </select>
+      </div>
+    </div>
+
+    <div id="loading-spinner" style="display:none;" class="text-center my-3">
+      <div class="spinner-border text-primary" role="status"></div>
+    </div>
+
+    <!-- Assets Table -->
+    <div class="table-responsive">
+      <table class="table table-bordered table-hover text-center align-middle" id="assetsTable">
+        <thead class="table-light">
+          <tr>
+            <th style="width: 5%;">Sr. No.</th>
+            <th style="width: 10%;">Type</th>
+            <th style="width: 10%;">Model</th>
+            <th>Username</th>
+            <th style="width: 10%;">Given Date</th>
+            <th>Area</th>
+            <th style="width: 10%;">Status</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if assets %}
+            {% for asset in assets %}
+              <tr data-href="{{ url_for('main.view_asset', asset_id=asset['_id']|string) }}"
+                  data-given-date="{{ asset.get('given_date', '') }}"
+                  data-purchase-date="{{ asset.get('purchase_date', '') }}"
+                  style="cursor: pointer;">
+                  
+                <td class="serial-cell text-center"></td>
+
+                <!-- Category -->
+                <td class="text-center">
+                  {% set category = asset.get('category') %}
+                  {{ category if category and category|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Model -->
+                <td class="text-center">
+                  {% set model = asset.get('system_model') or asset.get('model') %}
+                  {{ model if model and model|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Username -->
+                <td>
+                  {% set username = asset.get('username') %}
+                  {{ username if username and username|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Given Date -->
+                <td class="text-center">
+                  {% set given_date = asset.get('given_date') %}
+                  {{ given_date if given_date and given_date|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Area -->
+                <td>
+                  {% set area = asset.get('area') %}
+                  {{ area if area and area|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Status -->
+                <td class="text-center">
+                  {% set status = asset.get('status') %}
+                  {{ status if status and status|lower not in ['none','null'] else '—' }}
+                </td>
+
+                <!-- Remarks -->
+                <td>
+                  {% set remarks = asset.get('remarks') %}
+                  {% if status and status|lower in ['discard', 'repair/faulty'] %}
+                    <strong style="color: red;">
+                      {{ remarks if remarks and remarks|lower not in ['none','null'] else '—' }}
+                    </strong>
+                  {% else %}
+                    {{ remarks if remarks and remarks|lower not in ['none','null'] else '—' }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="8">No assets found.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="d-flex justify-content-end mt-3">
+      <nav>
+        <ul class="pagination mb-0">
+          <li class="page-item"><a class="page-link" href="#" id="prevPage">&laquo;</a></li>
+          <li class="page-item"><a class="page-link" href="#" id="nextPage">&raquo;</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal fade" id="changePasswordModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Change Password</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="change-password-form">
+          <div class="mb-3">
+            <label class="form-label">Current Password</label>
+            <input type="password" class="form-control" id="current-password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new-password" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" class="form-control" id="confirm-password" required>
+          </div>
+        </form>
+        <div id="change-password-message" class="mt-2 text-center text-danger"></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="submit-password-change">Update Password</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bulk Action Modal -->
+<div class="modal fade" id="bulkActionModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Bulk Actions</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <p id="bulkCount" class="fw-bold"></p>
+        <div class="d-flex justify-content-around">
+          <a id="bulkExportKeka" class="btn btn-outline-primary">Export Keka</a>
+          <a id="bulkExportExcel" class="btn btn-outline-success">Export Excel</a>
+          <button id="bulkDelete" class="btn btn-outline-danger">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<style>
+  #sortBtn.sort-selected {
+    color: #6c757d; /* placeholder gray */
+    font-style: italic;
+    background-color: #ffffff; /* dashboard background */
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  .sort-option.active {
+    color: #6c757d !important; /* placeholder gray */
+    background-color: #ffffff !important; /* dashboard white */
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-top-right-radius: 6px !important;
+    border-bottom-right-radius: 6px !important;
+    font-style: italic;
+    pointer-events: none;
+  }
+  #sortBtn {
+    border-top-left-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+  }
+  tr.selected {
+  background-color: #b3d4fc !important;
+}
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    function debounce(fn, delay) {
+      let timer;
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    function fuzzyMatch(text, query) {
+      const pattern = query.toLowerCase().split("").map(c => `(?=.*${c})`).join("");
+      return new RegExp(pattern).test(text.toLowerCase());
+    }
+
+    function normalizeCurrency(str) {
+      return str.replace(/[,₹$]/g, "").trim();
+    }
+
+    if (performance.navigation.type === 1) {
+      localStorage.removeItem("dashboardState");
+    }
+
+    const table = document.getElementById("assetsTable");
+    const entriesSelect = document.getElementById("entriesSelect");
+    const searchInput = document.getElementById("searchInput");
+    const prevPage = document.getElementById("prevPage");
+    const nextPage = document.getElementById("nextPage");
+    const sortBtn = document.getElementById("sortBtn");
+    const sortOptions = document.querySelectorAll(".sort-option");
+    const spinner = document.getElementById("loading-spinner");
+
+    const sortConfig = {
+      given_date: "client",
+      purchase_date: "server",
+      category: "client",
+      status: "client",
+      model: "client"
+    };
+
+    let currentPage = 1;
+    let rowsPerPage = parseInt(entriesSelect.value);
+    let filteredRows = [];
+    let currentSort = null;
+
+    const saved = JSON.parse(localStorage.getItem("dashboardState") || "{}");
+    if (saved.sort) currentSort = saved.sort;
+    if (saved.entries) {
+      rowsPerPage = parseInt(saved.entries);
+      entriesSelect.value = saved.entries;
+    }
+    if (saved.page) currentPage = parseInt(saved.page);
+
+    const rows = Array.from(table.querySelector("tbody").querySelectorAll("tr"));
+    rows.forEach((row, idx) => {
+      const serialCell = row.querySelector(".serial-cell");
+      if (serialCell) serialCell.textContent = idx + 1;
+
+      const givenDate = row.querySelector("td:nth-child(5)")?.textContent.trim() || "";
+      const purchaseDate = row.querySelector("td:nth-child(6)")?.textContent.trim() || "";
+      const model = row.querySelector("td:nth-child(3)")?.textContent.trim() || "";
+
+      row.setAttribute("data-given-date", givenDate);
+      row.setAttribute("data-purchase-date", purchaseDate);
+      row.setAttribute("data-model", model);
+
+      const href = row.getAttribute("data-href");
+      if (href) {
+        row.addEventListener("click", () => {
+          window.location.href = href;
+        });
+      }
+    });
+
+    filteredRows = [...rows];
+
+    function parseDMY(dateStr) {
+      const [d, m, y] = dateStr.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    }
+
+    function applySort() {
+      if (!currentSort) return;
+
+      // split so the last part is direction and the rest is the field
+      const parts = currentSort.split("_");
+      const direction = parts.pop();           // "asc" or "desc"
+      const field = parts.join("_");           // e.g. "given_date" or "purchase_date"
+      const reverse = direction === "desc";
+
+      const parseDate = val => {
+        if (!val) return new Date(0);
+        // normalize common formats
+        val = String(val).trim();
+        // common expected: "dd-mm-yyyy" or "yyyy-mm-dd" or "yyyy-mm-dd hh:mm:ss"
+        let parts;
+        if (/\d{2}-\d{2}-\d{4}/.test(val)) { // dd-mm-yyyy
+          parts = val.split("-");
+          return new Date(+parts[2], +parts[1] - 1, +parts[0]);
+        }
+        if (/\d{4}-\d{2}-\d{2}/.test(val)) { // yyyy-mm-dd or yyyy-mm-dd hh:mm:ss
+          const d = val.split(" ")[0].split("-");
+          return new Date(+d[0], +d[1] - 1, +d[2]);
+        }
+        return new Date(0);
+      };
+
+      const parseCurrency = val => {
+        if (!val) return 0;
+        return parseFloat(String(val).replace(/[^0-9.\-]/g, "")) || 0;
+      };
+
+      // our data attributes use hyphens: data-given-date
+      const dataAttr = `data-${field.replace(/_/g, "-")}`;
+
+      filteredRows.sort((a, b) => {
+        let va = a.getAttribute(dataAttr) || "";
+        let vb = b.getAttribute(dataAttr) || "";
+
+        if (field.includes("date")) {
+          va = parseDate(va);
+          vb = parseDate(vb);
+        } else if (/price|cost|amount|value|total|gst|amount/i.test(field)) {
+          va = parseCurrency(va);
+          vb = parseCurrency(vb);
+        } else {
+          va = String(va).toLowerCase();
+          vb = String(vb).toLowerCase();
+        }
+
+        if (va === vb) return 0;
+        if (reverse) return va < vb ? 1 : -1;
+        return va > vb ? 1 : -1;
+      });
+    }
+
+
+
+    function updateSortUI() {
+      sortOptions.forEach(opt => opt.classList.remove("active"));
+      const selected = Array.from(sortOptions).find(opt => opt.dataset.sort === currentSort);
+      if (selected) {
+        selected.classList.add("active");
+        sortBtn.textContent = selected.textContent;
+        sortBtn.classList.add("sort-selected");
+      } else {
+        sortBtn.innerHTML = '<i class="bi bi-arrow-down-up"></i>';
+        sortBtn.classList.remove("sort-selected");
+      }
+    }
+
+    function renderTable() {
+      const tbody = table.querySelector("tbody");
+      filteredRows.forEach(row => tbody.appendChild(row));
+      const start = (currentPage - 1) * rowsPerPage;
+      const visibleRows = filteredRows.slice(start, start + rowsPerPage);
+
+      filteredRows.forEach(r => r.style.display = "none");
+      visibleRows.forEach((r, idx) => {
+        r.style.display = "";
+        const serialCell = r.querySelector(".serial-cell");
+        if (serialCell) serialCell.textContent = start + idx + 1;
+      });
+
+      localStorage.setItem("dashboardState", JSON.stringify({
+        sort: currentSort,
+        search: searchInput.value,
+        entries: rowsPerPage,
+        page: currentPage
+      }));
+    }
+
+        sortOptions.forEach(opt => {
+          opt.addEventListener("click", async e => {
+            e.preventDefault();
+            currentSort = opt.dataset.sort;
+            updateSortUI();
+            currentPage = 1;
+
+            const field = currentSort.split("_")[0];
+            const mode = sortConfig[field] || "client";
+
+            if (mode === "server") {
+              spinner.style.display = "block";
+              const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+              
+              // Use current search text if available, otherwise send empty string
+              const searchVal = searchInput.value.trim();
+
+              const res = await fetch("/filter_assets", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/x-www-form-urlencoded",
+                  "X-CSRFToken": csrfToken
+                },
+                body: `sort=${encodeURIComponent(currentSort)}&search=${encodeURIComponent(searchVal)}`
+              });
+
+              spinner.style.display = "none";
+              handleSearchResponse(res);
+            } else {
+              applySort();
+              renderTable();
+            }
+          });
+        });
+
+
+    entriesSelect.addEventListener("change", () => {
+      rowsPerPage = parseInt(entriesSelect.value);
+      currentPage = 1;
+      renderTable();
+    });
+
+    const debouncedSearch = debounce(async () => {
+      const search = searchInput.value.trim();
+      console.log("🔍 Sending search query:", search);
+
+      if (!search || search.length < 2) {
+        showEmptyState("Please enter at least 2 characters.");
+        return;
+      }
+
+      spinner.style.display = "block";
+
+      const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+      const res = await fetch("/filter_assets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": csrfToken
+        },
+        body: `search=${encodeURIComponent(search)}`
+      });
+
+      spinner.style.display = "none";
+      handleSearchResponse(res);
+    }, 500);
+
+    searchInput.addEventListener("input", debouncedSearch);
+
+    prevPage.addEventListener("click", e => {
+      e.preventDefault();
+      if (currentPage > 1) {
+        spinner.style.display = "block";
+        currentPage--;
+        setTimeout(() => {
+          renderTable();
+          spinner.style.display = "none";
+        }, 100);
+      }
+    });
+
+    nextPage.addEventListener("click", e => {
+      e.preventDefault();
+      if (currentPage * rowsPerPage < filteredRows.length) {
+        spinner.style.display = "block";
+        currentPage++;
+        setTimeout(() => {
+          renderTable();
+          spinner.style.display = "none";
+        }, 100);
+      }
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.ctrlKey && e.key === "f") {
+        e.preventDefault();
+        searchInput.focus();
+      }
+      if (e.key === "ArrowRight") nextPage.click();
+      if (e.key === "ArrowLeft") prevPage.click();
+    });
+
+    function renderAssetTable(assets) {
+      const tbody = table.querySelector("tbody");
+      tbody.innerHTML = "";
+
+      assets.forEach((asset, idx) => {
+        const tr = document.createElement("tr");
+        tr.setAttribute("data-href", `/view_asset/${asset._id}`);
+        tr.setAttribute("data-given-date", asset.given_date || "");
+        tr.setAttribute("data-purchase-date", asset.purchase_date || "");
+        tr.setAttribute("data-model", asset.model || asset["Model"] || asset["System Model"] || asset.system_model || "");
+        tr.className = "align-middle";
+        tr.innerHTML = `
+          <td class="serial-cell text-center">${idx + 1}</td>
+          <td class="text-center">${asset.category || "—"}</td>
+          <td class="text-center">${asset["Model"] || asset["System Model"] || asset.model || asset.system_model || "—"}</td>
+          <td>${asset.username || "—"}</td>
+          <td class="text-center">${asset.given_date || "—"}</td>
+          <td>${asset.area || "—"}</td>
+          <td class="text-center">${asset.status || "—"}</td>
+          <td>${
+            ["discard", "repair", "faulty"].includes((asset.status || "").toLowerCase())
+              ? `<strong style="color: red;">${asset.remarks || "—"}</strong>`
+              : asset.remarks || "—"
+          }</td>
+        `;
+        tr.addEventListener("click", () => {
+          window.location.href = tr.dataset.href;
+        });
+        tbody.appendChild(tr);
+      });
+
+      filteredRows = Array.from(tbody.querySelectorAll("tr"));
+      currentPage = 1;
+
+      const field = currentSort?.split("_")[0];
+      if (currentSort && sortConfig[field] === "client") {
+        applySort();
+      }
+
+      renderTable();
+    }
+
+    async function handleSearchResponse(response) {
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Search failed:", errorText);
+        showErrorState("Server error. Please try again.");
+        return;
+      }
+
+      let assets;
+      try {
+        assets = await response.json();
+      } catch (err) {
+        console.error("Failed to parse JSON:", err);
+        showErrorState("Invalid response format.");
+        return;
+      }
+
+      if (!Array.isArray(assets)) {
+        console.error("Expected array, got:", assets);
+        showErrorState("Unexpected data format.");
+        return;
+      }
+
+      if (assets.length === 0) {
+        showEmptyState("No matching assets found.");
+        return;
+      }
+
+      renderAssetTable(assets);
+    }
+
+    function showErrorState(message) {
+      const container = document.getElementById("asset-table");
+      container.innerHTML = `<div class="error">${message}</div>`;
+    }
+
+    function showEmptyState(message) {
+      const table = document.getElementById("assetsTable");
+      const tbody = table.querySelector("tbody");
+      tbody.innerHTML = `<tr><td colspan="8" class="text-muted text-center">${message}</td></tr>`;
+    }
+
+    const field = currentSort?.split("_")[0];
+    if (currentSort && sortConfig[field] === "client") {
+      applySort();
+    }
+    updateSortUI();
+    renderTable();
+
+    const submitBtn = document.getElementById("submit-password-change");
+    if (submitBtn) {
+      submitBtn.addEventListener("click", async () => {
+        const current = document.getElementById("current-password")?.value || "";
+        const newpw = document.getElementById("new-password")?.value || "";
+        const confirm = document.getElementById("confirm-password")?.value || "";
+        const msg = document.getElementById("change-password-message");
+        msg.textContent = "";
+
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+        const res = await fetch("/auth/api/change_password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          },
+          body: JSON.stringify({
+            current_password: current,
+            new_password: newpw,
+            confirm_password: confirm
+          }),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          msg.classList.remove("text-danger");
+          msg.classList.add("text-success");
+          msg.textContent = data.message;
+          setTimeout(() => location.reload(), 1000);
+        } else {
+          msg.classList.remove("text-success");
+          msg.classList.add("text-danger");
+          msg.textContent = data.message || "Failed to update password.";
+        }
+      });
+    }
+
+   // === Bulk Row Selection ===
+    let lastSelectedIndex = null;
+    let isDragging = false;
+    let dragStartIndex = null;
+    const tbody = table.querySelector("tbody");
+
+    // Delete handler (unchanged)
+    async function bulkDelete(selectedIds) {
+      if (!selectedIds.length) {
+        alert("No rows selected for deletion.");
+        return;
+      }
+      if (!confirm(`Are you sure you want to delete ${selectedIds.length} assets? This cannot be undone.`)) {
+        return;
+      }
+      try {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+        const res = await fetch("/export/bulk_delete", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrfToken
+          },
+          body: JSON.stringify({ ids: selectedIds })
+        });
+
+        const data = await res.json();
+        alert(data.message || data.error);
+
+        if (res.ok) {
+          selectedIds.forEach(id => {
+            const row = document.querySelector(`tr[data-id="${id}"]`);
+            if (row) row.remove();
+          });
+          location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Error deleting assets");
+      }
+    }
+
+    function updateBulkModal() {
+      const selectedRows = tbody.querySelectorAll("tr.selected");
+      const ids = Array.from(selectedRows).map(r => r.getAttribute("data-href").split("/").pop());
+
+      if (ids.length > 0) {
+        document.getElementById("bulkCount").textContent = `You have selected ${ids.length} entr${ids.length > 1 ? "ies" : "y"}.`;
+        const modal = new bootstrap.Modal(document.getElementById("bulkActionModal"));
+        modal.show();
+
+        document.getElementById("bulkExportKeka").href = `/export/keka?ids=${ids.join(",")}`;
+        document.getElementById("bulkExportExcel").href = `/export/excel?ids=${ids.join(",")}`;
+        document.getElementById("bulkDelete").onclick = () => bulkDelete(ids);
+      }
+    }
+
+    function clearSelection() {
+      tbody.querySelectorAll("tr").forEach(r => r.classList.remove("selected"));
+    }
+
+    // Mousedown: prepare drag or ctrl-click
+    tbody.addEventListener("mousedown", e => {
+      const row = e.target.closest("tr");
+      if (!row) return;
+
+      dragStartIndex = Array.from(tbody.children).indexOf(row);
+      isDragging = true;
+
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+click toggles selection
+        row.classList.toggle("selected");
+        lastSelectedIndex = dragStartIndex;
+      } else {
+        // Normal click clears selection and selects this row only
+        clearSelection();
+        row.classList.add("selected");
+        lastSelectedIndex = dragStartIndex;
+      }
+    });
+
+    // Mouseover during dragging selects range
+    tbody.addEventListener("mouseover", e => {
+      if (!isDragging) return;
+      const row = e.target.closest("tr");
+      if (!row) return;
+
+      const index = Array.from(tbody.children).indexOf(row);
+      clearSelection();
+
+      const start = Math.min(dragStartIndex, index);
+      const end = Math.max(dragStartIndex, index);
+
+      tbody.querySelectorAll("tr").forEach((r, i) => {
+        if (i >= start && i <= end) r.classList.add("selected");
+      });
+    });
+
+    // Mouseup: finalize selection
+    document.addEventListener("mouseup", e => {
+      if (!isDragging) return;
+      isDragging = false;
+
+      const selectedRows = tbody.querySelectorAll("tr.selected");
+      const selectedCount = selectedRows.length;
+
+      const ctrlPressed = e.ctrlKey || e.metaKey;
+
+      if (selectedCount === 1 && !ctrlPressed) {
+        // Single click: go to view
+        const href = selectedRows[0].getAttribute("data-href");
+        if (href) {
+          window.location.href = href;
+        }
+      } else if (selectedCount > 1) {
+        // Multi select by drag or ctrl: popup
+        updateBulkModal();
+      }
+      // If ctrl+click single row: do nothing more (no popup, no nav)
+    });
+
+    // Disable shift + arrow keys selection
+    document.addEventListener("keydown", e => {
+      if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+      if (e.shiftKey && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        e.preventDefault();
+        return;
+      }
+    });
+
+    // Keyboard shortcuts only if popup is visible
+    document.addEventListener("keydown", e => {
+      if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+
+      const modalElement = document.getElementById("bulkActionModal");
+      const modalShown = modalElement && modalElement.classList.contains("show");
+
+      if (!modalShown) return;
+
+      const rows = Array.from(tbody.querySelectorAll("tr.selected"));
+      const ids = rows.map(r => r.getAttribute("data-href").split("/").pop());
+
+      if (!ids.length) return;
+
+      if (e.key.toLowerCase() === "k") {
+        window.location.href = `/export/keka?ids=${ids.join(",")}`;
+      } else if (e.key.toLowerCase() === "e") {
+        window.location.href = `/export/excel?ids=${ids.join(",")}`;
+      } else if (e.key === "Delete") {
+        bulkDelete(ids);
+      }
+    });
+
+  });
+</script>
+{% endblock %}

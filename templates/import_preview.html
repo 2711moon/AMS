@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+
+  {% set errored_rows = preview_data | selectattr("errors") | rejectattr("errors", "equalto", []) | list %}
+
+  <div class="w-100" style="max-width: 1000px;">
+
+    <h2 class="mb-3 text-start">📥 Import Preview</h2>
+
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <form method="POST" action="{{ url_for('export.download_errors') }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-danger" type="submit">⬇️ Download Error Report</button>
+      </form>
+
+      <form method="POST" action="{{ url_for('export.download_fixed') }}" class="m-0">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-outline-success" type="submit">✅ Fix & Re-download</button>
+      </form>
+    </div>
+
+    <form action="{{ url_for('export.confirm_import') }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <table class="table table-bordered table-sm">
+        <thead class="table-light">
+          <tr>
+            <th>Sheet</th>
+            <th>Row</th>
+            <th>Field</th>
+            <th>Value</th>
+            <th>Error?</th>
+            <th>Suggestion</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set last_sheet = None %}
+          {% for row in preview_data %}
+            {% if row.sheet != last_sheet %}
+              <tr class="table-secondary">
+                <td colspan="6"><strong>📄 Sheet: {{ row.sheet }}</strong></td>
+              </tr>
+              {% set last_sheet = row.sheet %}
+            {% endif %}
+
+            {% for key, value in row.data.items() %}
+              {% set row_class = "" %}
+              {% if row.errors and key in row.errors %}
+                {% set row_class = "table-danger" %}
+              {% elif row.suggestions and key in row.suggestions %}
+                {% set row_class = "table-warning" %}
+              {% endif %}
+
+              <tr class="{{ row_class }}">
+                <td>{{ row.sheet }}</td>
+                <td>{{ row.row }}</td>
+                <td>
+                  {% if row.errors and key in row.errors %}
+                    <span class="text-danger fw-bold">{{ key }}</span>
+                  {% else %}
+                    <strong>{{ key }}</strong>
+                  {% endif %}
+                </td>
+                {% set key_lower = key|lower %}
+                <td>
+                  {% if key_lower in ('amount', 'total') or key_lower.startswith('gst') %}
+                    {{ value|inr }}
+                  {% else %}
+                    {{ value if value not in [None, ""] else "—" }}
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.errors and key in row.errors %}
+                    ❌ {{ row.errors[key] }}
+                  {% else %}
+                    ✅
+                  {% endif %}
+                </td>
+                <td>
+                  {% if row.suggestions and key in row.suggestions %}
+                    💡 {{ row.suggestions[key] }}
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+
+      <div class="mt-3">
+        <button class="btn btn-secondary" type="submit">✅ Confirm Import</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
