@@ -37,7 +37,7 @@ body {
 }
 
 .navbar {
-  background-color: #042351;
+  background-color: #043251;
   padding: 0rem 0.5rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   display: flex;
@@ -49,7 +49,7 @@ body {
   font-size: 1.8rem;
   font-family: "Times New Roman", Times, serif !important;
   font-weight: normal;
-  background-color: #042351;
+  background-color: #043251;
   padding: 0.5rem 1rem;
   border-radius: 6px;
   text-align: center;
@@ -68,7 +68,7 @@ body {
   transition: background-color 0.3s;
 }
 .navbar .nav-links .nav-link:hover {
-  background-color: #042351;
+  background-color: #043251;
 }
 
 .card {
@@ -113,7 +113,7 @@ select.form-select option:first-child {
   font-size: 2rem;
   font-weight: bold;
   color: #ffffff;
-  background-color: #042351;
+  background-color: #043251;
   padding: 0.75rem 1rem;
   border-radius: 6px 6px 0 0;
   margin-bottom: 1.5rem;
@@ -202,8 +202,8 @@ select.form-select option:first-child {
   padding: 0.6rem 1.4rem;
   font-size: 1rem;
   background-color: white;
-  color: #042351;
-  border: 1px solid #042351;
+  color: #043251;
+  border: 1px solid #043251;
   font-weight: 500;
   border-radius: 0;
   transition: background-color 0.3s ease, box-shadow 0.2s ease;
@@ -211,11 +211,11 @@ select.form-select option:first-child {
   line-height: 1;
 }
 .auth-tabs .nav-link:hover {
-  background-color: rgb(2.8, 24.5, 56.7);
+  background-color: rgb(2.8, 35, 56.7);
   color: white;
 }
 .auth-tabs .nav-link.active {
-  background-color: #042351;
+  background-color: #043251;
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0);
 }
 .auth-tabs .nav-link:first-child {
@@ -260,7 +260,7 @@ table td {
   font-size: 0.9rem;
 }
 table th {
-  background-color: #042351 !important;
+  background-color: #043251 !important;
   color: #ffffff !important;
   text-align: center;
 }
@@ -269,15 +269,15 @@ table tr:nth-child(even) {
 }
 
 .nav-tabs .nav-link {
-  color: #042351;
+  color: #043251;
 }
 .nav-tabs .nav-link.active {
-  background-color: #042351;
+  background-color: #043251;
   color: #ffffff;
 }
 
 .title-bar {
-  background-color: #042351;
+  background-color: #043251;
   color: #ffffff;
   text-align: center;
   font-family: "Times New Roman", Times, serif;
@@ -344,7 +344,7 @@ table tr:nth-child(even) {
   }
 }
 .btn {
-  background-color: #042351;
+  background-color: #043251;
   color: #ffffff;
   padding: 0.4rem 0.9rem;
   border: none;
@@ -379,26 +379,26 @@ table tr:nth-child(even) {
 }
 
 .btn-view {
-  background-color: #042351;
+  background-color: #043251;
   color: white;
-  border: 1px solid #042351;
+  border: 1px solid #043251;
   box-shadow: 0 4px 8px rgba(0, 123, 255, 0.15);
   white-space: nowrap;
 }
 .btn-view:hover {
-  background-color: #042351;
+  background-color: #043251;
   color: #ffffff;
   box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
 }
 
 .btn-logout {
   background-color: #ffffff;
-  color: #042351;
-  border: 1px solid #042351;
+  color: #043251;
+  border: 1px solid #043251;
   box-shadow: 0 4px 8px rgba(4, 35, 81, 0.15);
 }
 .btn-logout:hover {
-  background-color: #042351;
+  background-color: #043251;
   color: #ffffff;
   box-shadow: 0 0 10px rgba(4, 35, 81, 0.4);
 }
