@@ -1,4 +1,4 @@
-// 📁 dynamic_form/feature-list.js
+//feature-list.js
 
 import { getMasterFields } from "./globals.js";
 

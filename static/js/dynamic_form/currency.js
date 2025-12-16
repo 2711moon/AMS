@@ -1,4 +1,4 @@
-// 📁 dynamic_form/currency.js
+//currency.js
 import { flashInput } from './utils.js';
 
 export function attachCurrencyFormat(input, defaultValue = "") {

@@ -1,4 +1,4 @@
-// 📁 dynamic_form/asset-type.js
+//asset-type.js
 
 import { renderFields } from './fields.js';
 

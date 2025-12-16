@@ -1,4 +1,4 @@
-// 📁 dynamic_form/setup.js
+//setup.js
 import flatpickr from "flatpickr";
 import { isFutureDate } from "./utils.js";
 

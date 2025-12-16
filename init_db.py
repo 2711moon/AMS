@@ -1,3 +1,5 @@
+#init_db.py
+
 from pymongo import MongoClient
 from getpass import getpass
 from werkzeug.security import generate_password_hash

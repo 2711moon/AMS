@@ -1,4 +1,4 @@
-// 📁 dynamic_form/index.js
+//index.js
 
 // Entry point: initializes the asset form logic and datepickers
 

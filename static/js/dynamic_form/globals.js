@@ -1,4 +1,4 @@
-// 📁 dynamic_form/globals.js
+//globals.js
 
 export const fieldConfigMap = {};
 

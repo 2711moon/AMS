@@ -1,4 +1,4 @@
-#__init__.py
+##routes/__init__.py
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import Blueprint
 from .auth import auth_bp

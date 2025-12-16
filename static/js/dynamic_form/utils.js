@@ -1,4 +1,4 @@
-// 📁 dynamic_form/utils.js
+//utils.js
 // Pure utility functions (minimal DOM interaction)
 
 /**

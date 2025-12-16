@@ -1,4 +1,4 @@
-// 📁 dynamic_form/fields.js
+//fields.js
 
 import { attachCurrencyFormat, calculateTotal } from './currency.js';
 import { fieldConfigMap } from './globals.js';

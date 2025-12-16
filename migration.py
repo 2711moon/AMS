@@ -1,3 +1,5 @@
+#migration.py
+
 from models import assets_collection
 from routes.main import safe_to_float, normalize_gst_keys
 
