@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // 📁 dynamic_form/utils.js
+  //utils.js
   // Pure utility functions (minimal DOM interaction)
 
   /**
@@ -24,7 +24,7 @@
     setTimeout(() => input.classList.remove("bg-warning-subtle"), 800);
   }
 
-  // 📁 dynamic_form/currency.js
+  //currency.js
 
   function attachCurrencyFormat(input, defaultValue = "") {
     input.setAttribute("data-value", defaultValue);
@@ -103,7 +103,7 @@
     flashInput(totalInput);
   }
 
-  // 📁 dynamic_form/globals.js
+  //globals.js
 
   const fieldConfigMap = {};
 
@@ -117,7 +117,7 @@
     return masterFields;
   }
 
-  // 📁 dynamic_form/fields.js
+  //fields.js
 
 
   function renderFields(assetType, data = {}) {
@@ -128,7 +128,7 @@
 
     dynamicFieldsContainer.innerHTML = "";
 
-    const assetTypeInput = form.querySelector('[name="asset_type"]');
+    const assetTypeInput = form.querySelector('[name="category"]');
     if (assetTypeInput) {
       assetTypeInput.value = assetType;
     }
@@ -137,19 +137,23 @@
     if (!config) {
       fetch(`/get_fields/${encodeURIComponent(assetType)}`)
         .then(res => res.json())
-        .then(data => {
-          console.log(`📦 Response for ${assetType}:`, data);
-          config = data.fields;
+        .then(response => {
+            console.log(`📦 Response for ${assetType}:`, response);
 
-          if (!Array.isArray(config) || config.length === 0) {
-            console.warn("🚫 No fields to render for:", assetType);
-            dynamicFieldsContainer.innerHTML = `<div class="text-danger mb-3">No field config available for "${assetType}".</div>`;
-            return;
-          }
+            const config = response.fields;
 
-          fieldConfigMap[assetType] = config;
-          injectFields(config, data);
-        })
+            if (!Array.isArray(config) || config.length === 0) {
+              console.warn("🚫 No fields to render for:", assetType);
+              dynamicFieldsContainer.innerHTML =
+                `<div class="text-danger mb-3">No field config available for "${assetType}".</div>`;
+              return;
+            }
+
+            fieldConfigMap[assetType] = config;
+
+            // ✅ IMPORTANT: pass ASSET DATA, not API response
+            injectFields(config, data);
+          })
         .catch(err => {
           console.error("Failed to fetch dynamic fields:", err);
           dynamicFieldsContainer.innerHTML = `<div class="text-danger">Failed to load form configuration.</div>`;
@@ -333,21 +337,51 @@
   window.renderFields = renderFields;
   window.fieldConfigMap = fieldConfigMap;
 
-  // 📁 dynamic_form/asset-type.js
+  //asset-type.js
 
 
   function loadAssetTypes() {
     const typeSelect = document.getElementById("asset_type");
     const statusRemarksSection = document.getElementById("status-remarks-section");
 
+    const isEdit = Boolean(window.existingAssetData?.category);
+    const selectedCategory = window.existingAssetData?.category || "";
+
     fetch("/get_asset_types")
       .then(res => res.json())
       .then(types => {
-        typeSelect.innerHTML = `<option disabled selected value="">Select asset type</option>`;
+        // CLEAR first
+        typeSelect.innerHTML = "";
+
+        // EDIT MODE: inject ONLY the existing category
+        if (isEdit) {
+          const opt = document.createElement("option");
+          opt.value = selectedCategory;
+          opt.textContent = selectedCategory;
+          opt.selected = true;
+          typeSelect.appendChild(opt);
+
+          typeSelect.disabled = true;
+          typeSelect.classList.add("bg-secondary-subtle");
+          typeSelect.title = "Asset category cannot be changed";
+
+          renderFields(selectedCategory, window.existingAssetData);
+          statusRemarksSection.hidden = false;
+          return; // ⛔ STOP HERE — VERY IMPORTANT
+        }
+
+        // 🆕 CREATE MODE ONLY
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select asset type";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        typeSelect.appendChild(placeholder);
 
         types.forEach(type => {
           const opt = document.createElement("option");
-          opt.value = opt.textContent = type;
+          opt.value = type;
+          opt.textContent = type;
           typeSelect.appendChild(opt);
         });
 
@@ -355,17 +389,57 @@
         newOpt.value = "add_new_type";
         newOpt.textContent = "➕ Add New Type";
         typeSelect.appendChild(newOpt);
+      })
+      .catch(err => {
+        console.error("Error loading asset types:", err);
+      });
+  }
 
+  /*export function loadAssetTypes() {
+    const typeSelect = document.getElementById("asset_type");
+    const statusRemarksSection = document.getElementById("status-remarks-section");
+
+    fetch("/get_asset_types")
+      .then(res => res.json())
+      .then(types => {
+        const isEdit = !!window.existingAssetData?.category;
         const existingType = window.existingAssetData?.category;
-        if (existingType && existingType !== "add_new_type") {
-          const optionExists = [...typeSelect.options].some(opt => opt.value === existingType);
-          if (!optionExists) {
-            const opt = document.createElement("option");
-            opt.value = opt.textContent = existingType;
-            typeSelect.prepend(opt);
-          }
 
+        // 🔹 STEP 1: Initialize dropdown correctly
+        if (isEdit) {
+          typeSelect.innerHTML = `
+            <option value="${existingType}" selected>
+              ${existingType}
+            </option>
+          `;
+        } else {
+          typeSelect.innerHTML = `<option disabled selected value="">Select asset type</option>`;
+        }
+
+        // 🔹 STEP 2: Append other types (skip current in edit)
+        types.forEach(type => {
+          if (isEdit && type === existingType) return;
+
+          const opt = document.createElement("option");
+          opt.value = opt.textContent = type;
+          typeSelect.appendChild(opt);
+        });
+
+        // 🔹 STEP 3: Add "Add New Type" ONLY in create mode
+        if (!isEdit) {
+          const newOpt = document.createElement("option");
+          newOpt.value = "add_new_type";
+          newOpt.textContent = "➕ Add New Type";
+          typeSelect.appendChild(newOpt);
+        }
+
+        // 🔹 STEP 4: Render fields + lock dropdown (THIS IS THE RIGHT PLACE)
+        if (isEdit) {
           typeSelect.value = existingType;
+          typeSelect.disabled = true;
+          typeSelect.classList.add("bg-secondary-subtle");
+          typeSelect.title = "Asset category cannot be changed";
+
           renderFields(existingType);
           statusRemarksSection.hidden = false;
         }
@@ -374,6 +448,8 @@
         console.error("Error loading asset types:", err);
       });
   }
+
+  */
 
   // 📁 dynamic_form/status-remarks.js
 
@@ -395,7 +471,7 @@
     });
   }
 
-  // 📁 dynamic_form/feature-list.js
+  //feature-list.js
 
 
   /**
@@ -2984,7 +3060,7 @@
       window.flatpickr = flatpickr$1;
   }
 
-  // 📁 dynamic_form/setup.js
+  //setup.js
 
   /**
    * Initializes flatpickr datepickers and restricts native date inputs.
@@ -3022,7 +3098,7 @@
     });
   }
 
-  // 📁 dynamic_form/core.js
+  //core.js
 
 
   function fetchMasterFields() {
@@ -3041,7 +3117,10 @@
 
   async function setupForm() {
     await fetchMasterFields();
-    populateAvailableFeatureList();
+    // Populate feature list ONLY in create mode
+    if (!window.existingAssetData?.category) {
+      populateAvailableFeatureList();
+    }
 
     const createFormBtn = document.getElementById("create-form-btn");
     const form = document.getElementById("asset-form");
@@ -3096,6 +3175,8 @@
       }
     });
 
+  //Attach change handler ONLY in create mode
+  if (!window.existingAssetData?.category) {
     typeSelect.addEventListener("change", () => {
       const selectedType = typeSelect.value;
       const isAddNew = selectedType === "add_new_type";
@@ -3105,9 +3186,7 @@
       createFormBtn.hidden = !isAddNew;
 
       if (isAddNew) {
-        document.querySelectorAll("input[name='feature_checkbox']").forEach(cb => {
-          cb.checked = false;
-        });
+        document.querySelectorAll("input[name='feature_checkbox']").forEach(cb => cb.checked = false);
 
         localStorage.removeItem("selectedFeatures");
         sessionStorage.removeItem("selectedFeatures");
@@ -3119,7 +3198,7 @@
         dynamicFieldsContainer.innerHTML = "";
       } else {
         if (!fieldConfigMap[selectedType] || window.renderedTypeOnce !== selectedType) {
-          renderFields(selectedType, window.existingAssetData || {});
+          renderFields(selectedType, {});
           window.renderedTypeOnce = selectedType;
         }
         statusRemarksSection.hidden = false;
@@ -3127,19 +3206,21 @@
 
       form.dispatchEvent(new Event("input"));
     });
+  }
+
 
     handleStatusChange(form);
     loadAssetTypes();
     setupDatepickers();
-
+  /*
     if (window.fieldsToRender && window.fieldsToRender.length > 0 && window.existingAssetData) {
       const selectedType = window.existingAssetData.category;
       fieldConfigMap[selectedType] = window.fieldsToRender;
       renderFields(selectedType, window.existingAssetData);
       delete window.existingAssetData;
     }
-
-    // ✅ FIXED "Create Form" button: only renders fields, does NOT save
+    */ 
+    //FIXED "Create Form" button: only renders fields, does NOT save
     createFormBtn.addEventListener("click", () => {
       createFormBtn.disabled = true;
 
@@ -3174,7 +3255,64 @@
     });
   }
 
-  // 📁 dynamic_form/index.js
+
+  /*export function loadAssetTypes() {
+    const typeSelect = document.getElementById("asset_type");
+    const statusRemarksSection = document.getElementById("status-remarks-section");
+
+    const isEdit = Boolean(window.existingAssetData?.category);
+    const selectedCategory = window.existingAssetData?.category || "";
+
+    fetch("/get_asset_types")
+      .then(res => res.json())
+      .then(types => {
+        // 🔥 CLEAR first
+        typeSelect.innerHTML = "";
+
+        // ✅ EDIT MODE: inject ONLY the existing category
+        if (isEdit) {
+          const opt = document.createElement("option");
+          opt.value = selectedCategory;
+          opt.textContent = selectedCategory;
+          opt.selected = true;
+          typeSelect.appendChild(opt);
+
+          typeSelect.disabled = true;
+          typeSelect.classList.add("bg-secondary-subtle");
+          typeSelect.title = "Asset category cannot be changed";
+
+          renderFields(selectedCategory, window.existingAssetData);
+          statusRemarksSection.hidden = false;
+          return; // ⛔ STOP HERE — VERY IMPORTANT
+        }
+
+        // 🆕 CREATE MODE ONLY
+        const placeholder = document.createElement("option");
+        placeholder.value = "";
+        placeholder.textContent = "Select asset type";
+        placeholder.disabled = true;
+        placeholder.selected = true;
+        typeSelect.appendChild(placeholder);
+
+        types.forEach(type => {
+          const opt = document.createElement("option");
+          opt.value = type;
+          opt.textContent = type;
+          typeSelect.appendChild(opt);
+        });
+
+        const newOpt = document.createElement("option");
+        newOpt.value = "add_new_type";
+        newOpt.textContent = "➕ Add New Type";
+        typeSelect.appendChild(newOpt);
+      })
+      .catch(err => {
+        console.error("Error loading asset types:", err);
+      });
+  }
+  */
+
+  //index.js
 
 
   // Run setup once DOM is fully loaded

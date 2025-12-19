@@ -24,7 +24,8 @@
         <!-- Asset Type -->
         <div class="mb-3">
           <label for="asset_type" class="form-label">Asset Type</label>
-          <select id="asset_type" name="category" class="form-select">
+          <select id="asset_type" name="category" class="form-select"
+                 {% if editing %}disabled{% endif %}>
             <option value="" disabled selected>Select a type</option>
             {% for type in types %}
         <option value="{{ type }}" {% if asset_data.category == type %}selected{% endif %}

@@ -406,7 +406,7 @@ def edit_asset(asset_id):
         flash("Asset not found.", "danger")
         return redirect(url_for("main.dashboard"))
 
-    # 🔹 Normalize GST keys so we always have gst_XX
+    # Normalize GST keys so we always have gst_XX
     asset = normalize_gst_keys(asset)
 
     selected_type = asset.get("category", "")
@@ -414,7 +414,7 @@ def edit_asset(asset_id):
     fields_to_render = config.get("fields", []) if config else []
     allowed_fields = [f["name"] for f in fields_to_render]
 
-    # 🔹 Pre-populate form data
+    # Pre-populate form data
     populated_data = {}
     amount_numeric = safe_to_float(asset.get("amount"), 0.0)
 
@@ -455,6 +455,10 @@ def edit_asset(asset_id):
             val = "" if raw_val in [None, ""] else raw_val
 
         populated_data[field_name] = val
+
+    # 🔑 ADD THIS LINE — RIGHT HERE
+    populated_data["category"] = selected_type
+
 
     form = AssetForm(data=populated_data)
 
@@ -500,7 +504,7 @@ def edit_asset(asset_id):
         form=form,
         editing=True,
         master_fields=get_master_fields(),
-        asset_data=populated_data,
+        asset_data=asset,
         asset_id=asset_id,
         fields_to_render=fields_to_render,
         types=get_all_existing_types()

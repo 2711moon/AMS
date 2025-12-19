@@ -12,7 +12,7 @@ export function renderFields(assetType, data = {}) {
 
   dynamicFieldsContainer.innerHTML = "";
 
-  const assetTypeInput = form.querySelector('[name="asset_type"]');
+  const assetTypeInput = form.querySelector('[name="category"]');
   if (assetTypeInput) {
     assetTypeInput.value = assetType;
   }
@@ -21,19 +21,23 @@ export function renderFields(assetType, data = {}) {
   if (!config) {
     fetch(`/get_fields/${encodeURIComponent(assetType)}`)
       .then(res => res.json())
-      .then(data => {
-        console.log(`📦 Response for ${assetType}:`, data);
-        config = data.fields;
+      .then(response => {
+          console.log(`📦 Response for ${assetType}:`, response);
 
-        if (!Array.isArray(config) || config.length === 0) {
-          console.warn("🚫 No fields to render for:", assetType);
-          dynamicFieldsContainer.innerHTML = `<div class="text-danger mb-3">No field config available for "${assetType}".</div>`;
-          return;
-        }
+          const config = response.fields;
 
-        fieldConfigMap[assetType] = config;
-        injectFields(config, data);
-      })
+          if (!Array.isArray(config) || config.length === 0) {
+            console.warn("🚫 No fields to render for:", assetType);
+            dynamicFieldsContainer.innerHTML =
+              `<div class="text-danger mb-3">No field config available for "${assetType}".</div>`;
+            return;
+          }
+
+          fieldConfigMap[assetType] = config;
+
+          // ✅ IMPORTANT: pass ASSET DATA, not API response
+          injectFields(config, data);
+        })
       .catch(err => {
         console.error("Failed to fetch dynamic fields:", err);
         dynamicFieldsContainer.innerHTML = `<div class="text-danger">Failed to load form configuration.</div>`;

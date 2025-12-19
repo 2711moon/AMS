@@ -23,7 +23,10 @@ export function fetchMasterFields() {
 
 export async function setupForm() {
   await fetchMasterFields();
-  populateAvailableFeatureList();
+  // Populate feature list ONLY in create mode
+  if (!window.existingAssetData?.category) {
+    populateAvailableFeatureList();
+  }
 
   const createFormBtn = document.getElementById("create-form-btn");
   const form = document.getElementById("asset-form");
@@ -78,6 +81,8 @@ export async function setupForm() {
     }
   });
 
+//Attach change handler ONLY in create mode
+if (!window.existingAssetData?.category) {
   typeSelect.addEventListener("change", () => {
     const selectedType = typeSelect.value;
     const isAddNew = selectedType === "add_new_type";
@@ -87,9 +92,7 @@ export async function setupForm() {
     createFormBtn.hidden = !isAddNew;
 
     if (isAddNew) {
-      document.querySelectorAll("input[name='feature_checkbox']").forEach(cb => {
-        cb.checked = false;
-      });
+      document.querySelectorAll("input[name='feature_checkbox']").forEach(cb => cb.checked = false);
 
       localStorage.removeItem("selectedFeatures");
       sessionStorage.removeItem("selectedFeatures");
@@ -101,7 +104,7 @@ export async function setupForm() {
       dynamicFieldsContainer.innerHTML = "";
     } else {
       if (!fieldConfigMap[selectedType] || window.renderedTypeOnce !== selectedType) {
-        renderFields(selectedType, window.existingAssetData || {});
+        renderFields(selectedType, {});
         window.renderedTypeOnce = selectedType;
       }
       statusRemarksSection.hidden = false;
@@ -109,19 +112,21 @@ export async function setupForm() {
 
     form.dispatchEvent(new Event("input"));
   });
+}
+
 
   handleStatusChange(form);
   loadAssetTypes();
   setupDatepickers();
-
+/*
   if (window.fieldsToRender && window.fieldsToRender.length > 0 && window.existingAssetData) {
     const selectedType = window.existingAssetData.category;
     fieldConfigMap[selectedType] = window.fieldsToRender;
     renderFields(selectedType, window.existingAssetData);
     delete window.existingAssetData;
   }
-
-  // ✅ FIXED "Create Form" button: only renders fields, does NOT save
+  */ 
+  //FIXED "Create Form" button: only renders fields, does NOT save
   createFormBtn.addEventListener("click", () => {
     createFormBtn.disabled = true;
 
@@ -155,3 +160,60 @@ export async function setupForm() {
     createFormBtn.disabled = false; // Re-enable button
   });
 }
+
+
+/*export function loadAssetTypes() {
+  const typeSelect = document.getElementById("asset_type");
+  const statusRemarksSection = document.getElementById("status-remarks-section");
+
+  const isEdit = Boolean(window.existingAssetData?.category);
+  const selectedCategory = window.existingAssetData?.category || "";
+
+  fetch("/get_asset_types")
+    .then(res => res.json())
+    .then(types => {
+      // 🔥 CLEAR first
+      typeSelect.innerHTML = "";
+
+      // ✅ EDIT MODE: inject ONLY the existing category
+      if (isEdit) {
+        const opt = document.createElement("option");
+        opt.value = selectedCategory;
+        opt.textContent = selectedCategory;
+        opt.selected = true;
+        typeSelect.appendChild(opt);
+
+        typeSelect.disabled = true;
+        typeSelect.classList.add("bg-secondary-subtle");
+        typeSelect.title = "Asset category cannot be changed";
+
+        renderFields(selectedCategory, window.existingAssetData);
+        statusRemarksSection.hidden = false;
+        return; // ⛔ STOP HERE — VERY IMPORTANT
+      }
+
+      // 🆕 CREATE MODE ONLY
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select asset type";
+      placeholder.disabled = true;
+      placeholder.selected = true;
+      typeSelect.appendChild(placeholder);
+
+      types.forEach(type => {
+        const opt = document.createElement("option");
+        opt.value = type;
+        opt.textContent = type;
+        typeSelect.appendChild(opt);
+      });
+
+      const newOpt = document.createElement("option");
+      newOpt.value = "add_new_type";
+      newOpt.textContent = "➕ Add New Type";
+      typeSelect.appendChild(newOpt);
+    })
+    .catch(err => {
+      console.error("Error loading asset types:", err);
+    });
+}
+*/
