@@ -39,7 +39,7 @@ asset_type_fields = {
   "Barcode Scanner": [
     {"label": "Model", "name": "model", "type": "datalist", "options": ["abc", "def", "ghi", "jkl", "mno"]},  
     #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE (ASK IF NEEDED, IF THEY PUT THEIR OR ACCOUNTS TAG, OR JUST SERIAL NO. SUFFICES)
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     #{"label": "Username", "name": "username", "type": "text"}, REMOVE
@@ -54,7 +54,8 @@ asset_type_fields = {
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
-    {"label": "Send By", "name": "send_by", "type": "text"},
+    #{"label": "Send By", "name": "send_by", "type": "text"}, REMOVE
+    {"label": "Sent by", "name": "sent_by", "type": "text"}, #ADD
     {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
   ],
@@ -75,7 +76,7 @@ asset_type_fields = {
   "Franchise TAB": [
     {"label": "Model", "name": "model", "type": "text"},
     #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE (ASK IF NEEDED, IF THEY PUT THEIR OR ACCOUNTS TAG, OR JUST SERIAL NO. SUFFICES)
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
@@ -99,7 +100,7 @@ asset_type_fields = {
   "Franchise Printer": [
     {"label": "Model", "name": "model", "type": "text"},
     #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"},REMOVE
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
@@ -116,13 +117,14 @@ asset_type_fields = {
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
     #{"label": "Send By", "name": "send_by", "type": "text"}, REMOVE
-    {"label": "Sent By", "name": "$sent_by", "type": "text"}, #ADD
+    {"label": "Sent by", "name": "sent_by", "type": "text"}, #ADD
+    {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
   ],
   
   "Franchise Inv": [
     #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"}, REMOVE
     {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
@@ -132,7 +134,7 @@ asset_type_fields = {
     {"label": "OS", "name": "os", "type": "datalist", "options": []},
     {"label": "System Model", "name": "system_model", "type": "datalist", "options": []},
     {"label": "System Manufacturer", "name": "system_manufacturer", "type": "datalist", "options": []},
-    {"label": "Serial No. ", "name": "serial_no", "type": "text"},
+    {"label": "Serial No.", "name": "serial_no", "type": "text"},
     {"label": "Processor", "name": "processor", "type": "text"},
     {"label": "RAM", "name": "ram", "type": "text"},
     {"label": "HDD Size", "name": "hdd", "type": "text"},
@@ -154,7 +156,7 @@ asset_type_fields = {
     {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     #{"label": "Asset Tag", "name": "asset_tag", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"}, REMOVE (ASK ABOUT IT)
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
@@ -179,7 +181,7 @@ asset_type_fields = {
     {"label": "Model", "name": "model", "type": "datalist", "options": ["abc", "def", "ghi", "jkl", "mno"]},
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
-    {"label": "Area", "name": "Area", "type": "text"},
+    {"label": "Area", "name": "area", "type": "text"},
     {"label": "Courier by", "name": "courier_by", "type": "text"},
     {"label": "Amount", "name": "amount", "type": "number"},
     {"label": "GST (18%)", "name": "gst_18", "type": "number"},
@@ -191,7 +193,7 @@ asset_type_fields = {
   "Printer": [
     {"label": "Model", "name": "model", "type": "text"},
     #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
     {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
     #{"label": "Asset Tag", "name": "asset_tag", "type": "text"}, REMOVE
     #{"label": "Endpoint name", "name": "endpoint_name", "type": "text"}, REMOVE  (ASK ABOUT IT)
@@ -250,7 +252,7 @@ asset_type_fields = {
   #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
   {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
   # {"label": "Asset Tag", "name": "asset_tag", "type": "text"}, REMOVE
-  {"label": "IT Tag", "name": "IT_tag", "type": "text"}, #ADD
+  {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
   # {"label": "Endpoint name", "name": "endpoint_name", "type": "text"}, REMOVE (ASK ABOUT IT)
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},

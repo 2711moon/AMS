@@ -1,4 +1,3 @@
-#utils.py
 from models import asset_types_collection
 from bson import ObjectId
 from datetime import datetime
@@ -103,7 +102,7 @@ def get_master_fields():
         {"label": "User Code", "name": "user_code", "type": "text"},
         {"label": "Area of Collection", "name": "area_of_collection", "type": "text"},
         {"label": "Area", "name": "area", "type": "text"},
-        {"label": "State", "name": "state", "type": "select", "options": get_indian_states()},  # 👈 state
+        {"label": "State", "name": "state", "type": "select", "options": get_indian_states()},  
         {"label": "Amount", "name": "amount", "type": "number"},
         {"label": "GST (18%)", "name": "gst_18", "type": "number"},
         {"label": "GST (22%)", "name": "gst_22", "type": "number"},
@@ -131,9 +130,30 @@ def get_master_fields():
         {"label": "RAM", "name": "ram", "type": "text"},
         {"label": "Courier by", "name": "courier_by", "type": "text"},
         {"label": "HDD Size", "name": "hdd", "type": "text"},
-        {"label": "Free Space", "name": "free_space", "type": "text"},
         {"label": "Endpoint Name", "name": "endpoint_name", "type": "text"},
-        {"label": "Received on Approval", "name": "received_on_approval", "type": "text"}
+        {"label": "Received on Approval", "name": "received_on_approval", "type": "text"},
+        {"label": "Storage", "name": "storage", "type": "text"},
+        {"label": "IMEI-1", "name": "imei1", "type": "text"},
+        {"label": "IMEI-2", "name": "imei2", "type": "text"},
+        {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
+        {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
+        {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
+        {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+        {"label": "Sent By", "name": "send_by", "type": "text"},  
+        {"label": "System Model", "name": "system_model", "type": "datalist", "options": []},
+        {"label": "Received", "name": "received", "type": "text"},
+        {"label": "Asset Tag (CPU)", "name": "cpu_asset_tag", "type": "text"},
+        {"label": "IT Tag (CPU)", "name": "IT_tagC", "type": "text"}, #ADD
+        {"label": "Accounts Tag (CPU)", "name": "accounts_tagC", "type": "text"}, #ADD      
+        {"label": "Main circuit board", "name": "main_circuit_board", "type": "text"},
+        {"label": "MTR Asset Tag", "name": "mtr_asset_tag", "type": "text"}, #REMOVE
+        {"label": "Asset Tag (Monitor)", "name": "monitor_asset_tag", "type": "text"}, #REMOVE
+        {"label": "IT Tag (MTR)", "name": "IT_tagM", "type": "text"}, #ADD
+        {"label": "Accounts Tag (MTR)", "name": "accounts_tagM", "type": "text"}, #ADD
+        {"label": "Monitor Make", "name": "monitor_make", "type": "text"},
+        {"label": "Total Hard Disk Size", "name": "hdd", "type": "text"},
+        {"label": "HDD Type", "name": "hdd_type", "type": "datalist", "options": []},
+        {"label": "Battery Type", "name": "battery_type", "type": "datalist", "options": []}  
     ]
 
 def get_indian_states():
