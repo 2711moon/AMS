@@ -112,7 +112,7 @@
             <th style="width: 5%;">Sr. No.</th>
             <th style="width: 10%;">Type</th>
             <th style="width: 10%;">Model</th>
-            <th>Username</th>
+            <th>Employee name</th>
             <th style="width: 10%;">Given Date</th>
             <th>Area</th>
             <th style="width: 10%;">Status</th>
@@ -141,10 +141,10 @@
                   {{ model if model and model|lower not in ['none','null'] else '—' }}
                 </td>
 
-                <!-- Username -->
+                <!-- Employee Name -->
                 <td>
-                  {% set username = asset.get('username') %}
-                  {{ username if username and username|lower not in ['none','null'] else '—' }}
+                  {% set employee_name = asset.get('employee_name') %}
+                  {{ employee_name if employee_name and employee_name|lower not in ['none','null'] else '—' }}
                 </td>
 
                 <!-- Given Date -->
@@ -573,7 +573,7 @@
           <td class="serial-cell text-center">${idx + 1}</td>
           <td class="text-center">${asset.category || "—"}</td>
           <td class="text-center">${asset["Model"] || asset["System Model"] || asset.model || asset.system_model || "—"}</td>
-          <td>${asset.username || "—"}</td>
+          <td>${asset.employee_name || "—"}</td>
           <td class="text-center">${asset.given_date || "—"}</td>
           <td>${asset.area || "—"}</td>
           <td class="text-center">${asset.status || "—"}</td>
