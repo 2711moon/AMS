@@ -12,7 +12,7 @@ db = client["ams"]
 users_collection = db["users"]
 asset_types_collection = db["asset_types"]
 
-# Asset type field definitions
+#Asset type field definitions
 asset_type_fields = {
   "Mobile": [ 
     {"label": "Model", "name": "model", "type": "datalist", "options": ["abc", "def", "ghi", "jkl", "mno"]},
@@ -27,9 +27,9 @@ asset_type_fields = {
     {"label": "GST (18%)", "name": "gst_18", "type": "number"},
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Given Date", "name": "given_date", "type": "date"},
-    #{"label": "Username", "name": "username", "type": "text"}, REMOVE
-    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    #{"label": "Username", "name": "username", "type": "text"}, removed
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
     {"label": "Area", "name": "area", "type": "text"},
     {"label": "State", "name": "state", "type": "select"},
     {"label": "Status", "name": "status", "type": "select"},
@@ -38,13 +38,13 @@ asset_type_fields = {
 
   "Barcode Scanner": [
     {"label": "Model", "name": "model", "type": "datalist", "options": ["abc", "def", "ghi", "jkl", "mno"]},  
-    #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE (ASK IF NEEDED, IF THEY PUT THEIR OR ACCOUNTS TAG, OR JUST SERIAL NO. SUFFICES)
-    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
-    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
+    #{"label": "User Code", "name": "user_code", "type": "text"}, removed
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #added
+    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #added
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
-    #{"label": "Username", "name": "username", "type": "text"}, REMOVE
-    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    #{"label": "Username", "name": "username", "type": "text"}, removed
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
     {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Area", "name": "area", "type": "text"},
     {"label": "State", "name": "state", "type": "select"},
@@ -54,8 +54,8 @@ asset_type_fields = {
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
-    #{"label": "Send By", "name": "send_by", "type": "text"}, REMOVE
-    {"label": "Sent by", "name": "sent_by", "type": "text"}, #ADD
+    #{"label": "Send By", "name": "send_by", "type": "text"}, removed
+    {"label": "Sent by", "name": "sent_by", "type": "text"}, #added
     {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
   ],
@@ -75,21 +75,21 @@ asset_type_fields = {
 
   "Franchise TAB": [
     {"label": "Model", "name": "model", "type": "text"},
-    #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE (ASK IF NEEDED, IF THEY PUT THEIR OR ACCOUNTS TAG, OR JUST SERIAL NO. SUFFICES)
-    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
-    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
+    #{"label": "User Code", "name": "user_code", "type": "text"}, removed
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #added
+    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #added
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
-    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-    #{"label": "Username", "name": "username", "type": "text"}, REMOVE  
-    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+    #{"label": "Username", "name": "username", "type": "text"}, removed  
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
     {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Area", "name": "area", "type": "text"},
     {"label": "State", "name": "state", "type": "select"},
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
-    #{"label": "Send By", "name": "send_by", "type": "text"}, REMOVE
-    {"label": "Sent by", "name": "sent_by", "type": "text"}, #ADD
+    #{"label": "Send By", "name": "send_by", "type": "text"}, removed
+    {"label": "Sent by", "name": "sent_by", "type": "text"}, #added
     {"label": "Amount", "name": "amount", "type": "number"},
     {"label": "GST (18%)", "name": "gst_18", "type": "number"},
     {"label": "Total", "name": "total", "type": "number"},
@@ -99,16 +99,16 @@ asset_type_fields = {
 
   "Franchise Printer": [
     {"label": "Model", "name": "model", "type": "text"},
-    #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
-    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
-    #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"},REMOVE
+    #{"label": "User Code", "name": "user_code", "type": "text"}, removed
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #added
+    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #added
+    #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"},removed
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
-    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-    #{"label": "Username", "name": "username", "type": "text"}, REMOVE
-    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+    #{"label": "Username", "name": "username", "type": "text"}, removed
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
     {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Area", "name": "area", "type": "text"},
     {"label": "State", "name": "state", "type": "select"},
@@ -116,8 +116,8 @@ asset_type_fields = {
     {"label": "GST (18%)", "name": "gst_18", "type": "number"},
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
-    #{"label": "Send By", "name": "send_by", "type": "text"}, REMOVE
-    {"label": "Sent by", "name": "sent_by", "type": "text"}, #ADD
+    #{"label": "Send By", "name": "send_by", "type": "text"}, removed
+    {"label": "Sent by", "name": "sent_by", "type": "text"}, #added
     {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
   ],
@@ -149,16 +149,16 @@ asset_type_fields = {
   ],
 
   "Laptop": [
-    #{"label": "Current User Code", "name": "user_code", "type": "text"}, REMOVE
-    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-    #{"label": "Username", "name": "username", "type": "text"}, REMOVE
-    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    #{"label": "Current User Code", "name": "user_code", "type": "text"}, removed
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+    #{"label": "Username", "name": "username", "type": "text"}, removed
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
     {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Serial No.", "name": "serial_no", "type": "text"},
-    #{"label": "Asset Tag", "name": "asset_tag", "type": "text"}, REMOVE
-    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
-    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
-    #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"}, REMOVE (ASK ABOUT IT)
+    #{"label": "Asset Tag", "name": "asset_tag", "type": "text"}, removed
+    {"label": "IT Tag", "name": "it_tag", "type": "text"}, #added
+    {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #added
+    #{"label": "Endpoint Name", "name": "endpoint_name", "type": "text"}, removed (ASK ABOUT IT)
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
     {"label": "License", "name": "license", "type": "text"},
@@ -249,14 +249,15 @@ asset_type_fields = {
   ],
 
   "All-in-one": [
-  #{"label": "User Code", "name": "user_code", "type": "text"}, REMOVE
-  {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
-  # {"label": "Asset Tag", "name": "asset_tag", "type": "text"}, REMOVE
-  {"label": "IT Tag", "name": "it_tag", "type": "text"}, #ADD
-  # {"label": "Endpoint name", "name": "endpoint_name", "type": "text"}, REMOVE (ASK ABOUT IT)
+  #{"label": "User Code", "name": "user_code", "type": "text"}, removed
+  {"label": "Employee code", "name": "employee_code", "type": "text"}, #added
+  {"label": "Employee name", "name": "employee_name", "type": "text"}, #added
+  # {"label": "Asset Tag", "name": "asset_tag", "type": "text"}, removed
+  {"label": "IT Tag", "name": "it_tag", "type": "text"}, #added
+  # {"label": "Endpoint name", "name": "endpoint_name", "type": "text"}, removed (ASK ABOUT IT)
     {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
     {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
-  # {"label": "Username", "name": "username", "type": "text"},gf
+  # {"label": "Username", "name": "username", "type": "text"},
    {"label": "Given Date", "name": "given_date", "type": "date"},
    {"label": "Domain", "name": "domain", "type": "text"},
    {"label": "IP Address", "name": "ip_address", "type": "text"}, 
@@ -348,6 +349,25 @@ asset_type_fields = {
     {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
     {"label": "Amount", "name": "amount", "type": "number"},
     {"label": "GST (28%)", "name": "gst_28", "type": "number"},
+    {"label": "Total", "name": "total", "type": "number"},
+    {"label": "Status", "name": "status", "type": "select"},
+    {"label": "Remarks", "name": "remarks", "type": "text"}
+  ],
+
+  "Headphones": [   
+    {"label": "Model", "name": "model", "type": "text"},
+    {"label": "Date of Purchase", "name": "purchase_date", "type": "date"},
+    {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
+    {"label": "Serial No.", "name": "serial_no", "type": "text"}, 
+    #{"label": "Username", "name": "username", "type": "text"}, REMOVE
+    {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
+    {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    {"label": "Given Date", "name": "given_date", "type": "date"},
+    {"label": "Area", "name": "area", "type": "text"},
+    {"label": "State", "name": "state", "type": "select"},
+    {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
+    {"label": "Amount", "name": "amount", "type": "number"},
+    {"label": "GST (18%)", "name": "gst_18", "type": "number"},
     {"label": "Total", "name": "total", "type": "number"},
     {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
