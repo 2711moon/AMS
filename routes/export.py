@@ -70,12 +70,16 @@ def export_keka():
             return "-"
 
     for asset in assets:
+        asset_desc = "-"
+        location = "-"
+
         asset_name = fmt(str(asset.get("category") or "").strip())
+
+        # ================= DESKTOP =================
         if asset_name.lower() == "desktop":
             cpu_tag = (
                 str(asset.get("IT_tagC") or "").strip()
                 or str(asset.get("accounts_tagC") or "").strip()
-                or str(asset.get("endpoint_name") or "").strip()
                 or "-"
             )
 
@@ -88,23 +92,19 @@ def export_keka():
 
             asset_id = f"{cpu_tag}, {monitor_or_mtr}"
 
-        elif asset_name.lower() == "laptop":  # <-- ✅ Added Laptop logic
-            # Asset ID: Prefer user_code, else serial_no
+        # ================= LAPTOP =================
+        elif asset_name.lower() == "laptop":
             asset_id = (
                 str(asset.get("it_tag") or "").strip()
                 or str(asset.get("accounts_tag") or "").strip()
                 or str(asset.get("serial_no") or "").strip()
-                or str(asset.get("endpoint_name") or "").strip()
                 or "-"
             )
 
-            # Asset Name: Combine manufacturer and model
             manufacturer = str(asset.get("system_manufacturer") or "").strip()
             model = str(asset.get("system_model") or "").strip()
             asset_name = ", ".join([m for m in [manufacturer, model] if m]) or asset_name
 
-
-            # Asset Description: processor, RAM, OS, HDD, Free space, License
             desc_parts = [
                 str(asset.get("processor") or "").strip(),
                 str(asset.get("ram") or "").strip(),
@@ -114,37 +114,33 @@ def export_keka():
             ]
             asset_desc = ", ".join([d for d in desc_parts if d]) or "-"
 
-            # Asset Location: endpoint_name
             area = str(asset.get("area") or "").strip()
             state = str(asset.get("state") or "").strip()
-            location = (f"{area} ({state})" if area and state else area or state or "-") #remove endpoint refernce here
+            location = f"{area} ({state})" if area and state else area or state or "-"
 
-        elif asset_name.lower() == "franchise inv":  # <-- Franchise Inventory
+        # ================= FRANCHISE INV =================
+        elif asset_name.lower() == "franchise inv":
             asset_id = (
                 str(asset.get("it_tag") or "").strip()
                 or str(asset.get("accounts_tag") or "").strip()
-                or str(asset.get("endpoint_name") or "").strip()
                 or "-"
             )
 
-        elif asset_name.lower() == "mobile":  # <-- Mobile logic
+        # ================= MOBILE =================
+        elif asset_name.lower() == "mobile":
             imei1 = str(asset.get("imei1") or "").strip()
             imei2 = str(asset.get("imei2") or "").strip()
-            if imei1:
-                asset_id = imei1
-            elif imei2:
-                asset_id = imei2
-            else:
-                asset_id = "-"
+            asset_id = imei1 or imei2 or "-"
+
+        # ================= GENERIC =================
         else:
             id_fields = [
                 "IT_tagC", "accounts_tagC",
                 "IT_tagM", "accounts_tagM",
                 "it_tag", "accounts_tag",
-                "serial_no", "endpoint_name"
+                "serial_no"
             ]
-
-            asset_id = next((str(asset.get(f) or "").strip() for f in id_fields if asset.get(f)), "")
+            asset_id = next((str(asset.get(f) or "").strip() for f in id_fields if asset.get(f)), "-")
 
             desc_parts = [
                 str(asset.get("model") or "").strip(),
@@ -158,7 +154,6 @@ def export_keka():
             state = str(asset.get("state") or "").strip()
             location = f"{area} ({state})" if area and state else area or state or "-"
 
-        
         asset_category = "IT assets"
         purchase_date = fmt_date(asset.get("purchase_date"))
         given_date = fmt_date(asset.get("given_date"))
@@ -182,12 +177,9 @@ def export_keka():
             status = fmt(raw_status)
             remarks = "-"
 
-        username = str(asset.get("username") or "").strip() #employee name should come here
-        user_code = str(asset.get("user_code") or "").strip() #employee code should come here
-        if username and user_code:
-            employee_number = f"{username} ({user_code})"
-        else:
-            employee_number = username or user_code or "-"
+        employee_name = str(asset.get("employee_name") or "").strip()
+        employee_code = str(asset.get("employee_code") or "").strip()
+        employee_number = f"{employee_name} ({employee_code})" if employee_name and employee_code else employee_name or employee_code or "-"
 
         assignment_date = given_date if given_date != "-" else "-"
 
@@ -198,7 +190,7 @@ def export_keka():
             location,
             asset_category,
             asset_name,
-            purchase_date, 
+            purchase_date,
             warranty_expires,
             condition,
             status,
@@ -214,14 +206,9 @@ def export_keka():
     output = BytesIO()
     wb.save(output)
     output.seek(0)
-    filename = f"KEKA_Asset_Export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
 
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name=filename,
-        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
+    filename = f"KEKA_Asset_Export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+    return send_file(output, as_attachment=True, download_name=filename)
 
 # === 📥 2. EXPORT EXCEL =======================================
 @export_bp.route('/excel')

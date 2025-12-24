@@ -150,7 +150,7 @@ def get_fields(asset_type):
 
         return jsonify({"fields": fields})
 
-    # ✅ Always return fields key to avoid frontend error
+    # Always return fields key to avoid frontend error
     return jsonify({"fields": []})
 
 
@@ -458,7 +458,6 @@ def edit_asset(asset_id):
 
     # 🔑 ADD THIS LINE — RIGHT HERE
     populated_data["category"] = selected_type
-
 
     form = AssetForm(data=populated_data)
 
