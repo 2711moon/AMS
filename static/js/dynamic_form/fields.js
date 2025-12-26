@@ -101,7 +101,10 @@ export function injectFields(config, data = {}) {
         opt.value = option;
         opt.textContent = option;
 
-        if (existingValue === option) {
+        if (
+          existingValue &&
+          existingValue.toString().toLowerCase() === option.toLowerCase()
+        ) {
           opt.selected = true;
           defaultOption.selected = false;
         }

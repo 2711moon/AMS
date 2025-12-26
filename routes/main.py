@@ -5,6 +5,7 @@ from datetime import datetime, date
 from models import assets_collection, asset_types_collection
 from forms import AssetForm
 from extensions import csrf, format_inr
+from asset_fields import PRIORITY_KEYS
 import re
 from utils import normalize_asset_data, get_master_fields, get_indian_states, get_all_existing_types, normalize_imported_asset
 
@@ -346,6 +347,11 @@ def create_asset():
 
         payload["category"] = selected_type
 
+        #Normalize status before saving
+        if "status" in payload and payload["status"]:
+            status = payload["status"].strip()
+            payload["status"] = status[0].upper() + status[1:]
+
         assets_collection.insert_one(payload)
 
         flash("Asset added successfully.", "success")
@@ -516,29 +522,36 @@ def view_asset(asset_id):
         flash("Asset not found", "danger")
         return redirect(url_for("main.dashboard"))
 
-    # 🔹 Normalize GST keys
+    #Normalize GST keys
     asset = normalize_gst_keys(asset)
 
-    # 🔹 Ensure numeric fields are float for consistent formatting
+    #Ensure numeric fields are float for consistent formatting
     for key in asset:
         if key in ["amount", "total"] or key.startswith("gst_"):
             asset[key] = safe_to_float(asset[key], 0.0)
 
-    # 3️⃣ Auto-calculate total if missing
+    #Auto-calculate total if missing
     amount = safe_to_float(asset.get("amount"), 0.0)
     if "total" not in asset or safe_to_float(asset.get("total"), 0.0) == 0.0:
         total_gst = sum(safe_to_float(asset[k], 0.0) for k in asset if k.startswith("gst_"))
         asset["total"] = amount + total_gst
 
     view_data = []
-    for key, value in asset.items():
+    ordered_keys = (
+        [k for k in PRIORITY_KEYS if k in asset] +
+        [k for k in asset.keys() if k not in PRIORITY_KEYS and k != "_id"]
+    )
+
+    for key in ordered_keys:
+        value = asset.get(key)
+
         if key == "_id":
             continue
 
-        # Determine if this field should be formatted as currency
+        #Determining if this field should be formatted as currency
         is_currency = key in ["amount", "total"] or key.startswith("gst_")
 
-        # Format value
+        #Format the value
         if isinstance(value, (datetime, date)):
             formatted_value = value.strftime("%d-%m-%Y")
         elif is_currency:
@@ -546,7 +559,7 @@ def view_asset(asset_id):
         else:
             formatted_value = value if value not in [None, ""] else "—"
 
-        # Label
+        #Label
         if key.startswith("gst_"):
             label = f"GST ({key.split('_')[1]}%)"
         else:

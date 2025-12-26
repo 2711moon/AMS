@@ -222,6 +222,7 @@ asset_type_fields = {
     #{"label": "Username", "name": "username", "type": "text"}, REMOVE
     {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
     {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
+    {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Domain", "name": "domain", "type": "text"},
     {"label": "OS", "name": "os", "type": "datalist", "options": []},
     {"label": "System Model", "name": "system_model", "type": "datalist", "options": []},
@@ -243,7 +244,6 @@ asset_type_fields = {
     {"label": "Amount", "name": "amount", "type": "number"},
     {"label": "GST (18%)", "name": "gst_18", "type": "number"},
     {"label": "Total", "name": "total", "type": "number"},
-    {"label": "Given Date", "name": "given_date", "type": "date"},
     {"label": "Status", "name": "status", "type": "select"},
     {"label": "Remarks", "name": "remarks", "type": "text"}
   ],
@@ -267,7 +267,7 @@ asset_type_fields = {
    {"label": "Main circuit board", "name": "main_circuit_board", "type": "text"},
    {"label": "Processor", "name": "processor", "type": "text"},
    {"label": "RAM", "name": "ram", "type": "text"},
-   {"label": "Total Hard Disk Size", "name": "hdd", "type": "text"},
+   {"label": "HDD Size", "name": "hdd", "type": "text"},
    {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
    {"label": "Amount", "name": "amount", "type": "number"},
    {"label": "GST (18%)", "name": "gst_18", "type": "number"},

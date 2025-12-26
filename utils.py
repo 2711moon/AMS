@@ -57,13 +57,12 @@ def matches_search(asset, search_term):
             return True
     return False
 
-
 def normalize_asset_data(data):
     return {
         'name': data.get('name', '').strip().title(),
         'category': data.get('category', '').strip().lower(),
         'owner': data.get('owner', '').strip(),
-        'status': data.get('status', 'available').strip().lower(),
+        'status':    data.get('status', 'available').strip(),
     }
 
 def normalize_imported_asset(asset):
@@ -96,9 +95,9 @@ def get_asset_statuses():
 
 def get_master_fields():
     return[
-        {"label": "Previous Owner", "name": "prev_owner", "type": "text"},
+        {"label": "Previous Employee", "name": "prev_emp", "type": "text"},
         {"label": "Username", "name": "username", "type": "text"},
-        {"label": "Previous User Code", "name": "prev_user_code", "type": "text"},
+        {"label": "Previous Employee Code", "name": "prev_emp_code", "type": "text"},
         {"label": "User Code", "name": "user_code", "type": "text"},
         {"label": "Area of Collection", "name": "area_of_collection", "type": "text"},
         {"label": "Area", "name": "area", "type": "text"},
@@ -118,7 +117,6 @@ def get_master_fields():
         {"label": "Invoice No.", "name": "invoice_no", "type": "text"},
         {"label": "Vendor", "name": "vendor", "type": "datalist", "options": []},
         {"label": "License", "name": "license", "type": "text"},
-        {"label": "MTR Asset Tag", "name": "mtr_asset_tag", "type": "text"},
         {"label": "Asset Tag", "name": "asset_tag", "type": "text"},
         {"label": "Serial No.", "name": "serial_no", "type": "text"},
         {"label": "OS", "name": "os", "type": "datalist", "options": []},
@@ -139,7 +137,7 @@ def get_master_fields():
         {"label": "Accounts Tag", "name": "accounts_tag", "type": "text"}, #ADD
         {"label": "Employee code", "name": "employee_code", "type": "text"}, #ADD
         {"label": "Employee name", "name": "employee_name", "type": "text"}, #ADD
-        {"label": "Sent By", "name": "send_by", "type": "text"},  
+        {"label": "Sent by", "name": "send_by", "type": "text"},  
         {"label": "System Model", "name": "system_model", "type": "datalist", "options": []},
         {"label": "Received", "name": "received", "type": "text"},
         {"label": "Asset Tag (CPU)", "name": "cpu_asset_tag", "type": "text"},
