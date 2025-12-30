@@ -3,61 +3,14 @@ change my code accordingly.
 syc my codes with new init_db.py and make the changes to the excel file to add the same:
 
 
+make the add new type working - 26/12
+individual delete buttons - select and drag kela tar should be allowed to be deleted 
+check export excel
+check export keka
+check import excel
+link the excel docuement to system and viceversa - 26/12
 
-PRIORITY_KEYS = [
-    "category",          #Asset Type/Category should be at the top
-    "Previous Employee",
-    "Previous Employee Code",
-    "Previous Given Date",
-    "Collected Date",
-    "Area of Collection",
-    "Model",
-    "System Model",
-    "System Manufacturer",
-    "HDD Size",
-    "OS",
-    "Storage",
-    "Main circuit board",
-    "Total Hard Disk Size",
-    "HDD Type",
-    "Battery Type",
-    "Domain",
-    "IP Address",
-    "Processor",
-    "RAM",
-    "IMEI-1",
-    "IMEI-2",
-    "IT Tag",
-    "Accounts Tag",
-    "IT Tag (CPU)",
-    "Accounts Tag (CPU)",
-    "Asset Tag (CPU)",
-    "Serial No.",
-    "Endpoint Name",
-    "IT Tag (MTR)",
-    "Accounts Tag (MTR)",
-    "MTR Asset Tag",
-    "Asset Tag (Monitor)",
-    "Monitor Make",
-    "Date of Purchase",
-    "Invoice No.",
-    "Vendor",
-    "License",
-    "Employee code",
-    "Employee name",
-    "Given Date",
-    "Year",
-    "Area",
-    "State",
-    "Amount",
-    "GST (18%)",
-    "GST (22%)",
-    "GST (28%)",
-    "Total",
-    "Sent By",
-    "Courier by",
-    "Received",
-    "Received on Approval",
-    "Status",
-    "Remarks"  
-]
+my drop down for add new asset has "add new type" which gives many features or fields, 
+i select them and the same gets populated as a form and then when i enter save, it should
+get stored in db with its respective features, thus reflect the same on dashboard and when 
+i am viewing the same
