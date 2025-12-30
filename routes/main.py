@@ -572,3 +572,16 @@ def view_asset(asset_id):
         })
 
     return render_template("view_asset.html", asset=asset, view_data=view_data)
+
+@main_bp.route("/delete_asset/<asset_id>", methods=["POST"])
+def delete_asset(asset_id):
+    try:
+        result = assets_collection.delete_one({"_id": ObjectId(asset_id)})
+        if result.deleted_count:
+            flash("Asset deleted successfully.", "success")
+        else:
+            flash("Asset not found.", "warning")
+    except Exception as e:
+        flash(f"Delete failed: {e}", "danger")
+
+    return redirect(url_for("main.dashboard"))

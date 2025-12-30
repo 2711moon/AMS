@@ -117,6 +117,7 @@
             <th>Area</th>
             <th style="width: 10%;">Status</th>
             <th>Remarks</th>
+            <th style="width: 5%;">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -176,6 +177,22 @@
                     {{ remarks if remarks and remarks|lower not in ['none','null'] else '—' }}
                   {% endif %}
                 </td>
+
+                <!-- Delete -->
+                <td class="text-center" onclick="event.stopPropagation();">
+                  <form method="POST"
+                      action="{{ url_for('main.delete_asset', asset_id=asset['_id']) }}"
+                      onsubmit="event.stopPropagation(); return confirm('Are you sure you want to delete this asset?');"
+                      style="display:inline;">
+
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                  <button type="submit" class="btn btn-sm btn-danger asset-action">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+                </td>
+
               </tr>
             {% endfor %}
           {% else %}
@@ -351,7 +368,8 @@
 
       const href = row.getAttribute("data-href");
       if (href) {
-        row.addEventListener("click", () => {
+        row.addEventListener("click", (e) => {
+          if (e.target.closest(".asset-action")) return;
           window.location.href = href;
         });
       }
@@ -583,7 +601,8 @@
               : asset.remarks || "—"
           }</td>
         `;
-        tr.addEventListener("click", () => {
+        tr.addEventListener("click", e => {
+          if (e.target.closest(".asset-action")) return;
           window.location.href = tr.dataset.href;
         });
         tbody.appendChild(tr);
@@ -750,6 +769,8 @@
 
     // Mousedown: prepare drag or ctrl-click
     tbody.addEventListener("mousedown", e => {
+      if (e.target.closest(".asset-action")) return; // ⬅️ KEY LINE
+
       const row = e.target.closest("tr");
       if (!row) return;
 
@@ -787,25 +808,23 @@
 
     // Mouseup: finalize selection
     document.addEventListener("mouseup", e => {
+      if (e.target.closest(".asset-action")) return;
+
       if (!isDragging) return;
       isDragging = false;
 
       const selectedRows = tbody.querySelectorAll("tr.selected");
       const selectedCount = selectedRows.length;
-
       const ctrlPressed = e.ctrlKey || e.metaKey;
 
       if (selectedCount === 1 && !ctrlPressed) {
-        // Single click: go to view
         const href = selectedRows[0].getAttribute("data-href");
         if (href) {
           window.location.href = href;
         }
       } else if (selectedCount > 1) {
-        // Multi select by drag or ctrl: popup
         updateBulkModal();
       }
-      // If ctrl+click single row: do nothing more (no popup, no nav)
     });
 
     // Disable shift + arrow keys selection

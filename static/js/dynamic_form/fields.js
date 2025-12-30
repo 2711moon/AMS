@@ -22,7 +22,7 @@ export function renderFields(assetType, data = {}) {
     fetch(`/get_fields/${encodeURIComponent(assetType)}`)
       .then(res => res.json())
       .then(response => {
-          console.log(`📦 Response for ${assetType}:`, response);
+          console.log(` Response for ${assetType}:`, response);
 
           const config = response.fields;
 
@@ -35,7 +35,7 @@ export function renderFields(assetType, data = {}) {
 
           fieldConfigMap[assetType] = config;
 
-          // ✅ IMPORTANT: pass ASSET DATA, not API response
+          // IMPORTANT: pass ASSET DATA, not API response
           injectFields(config, data);
         })
       .catch(err => {

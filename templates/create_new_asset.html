@@ -24,18 +24,23 @@
         <!-- Asset Type -->
         <div class="mb-3">
           <label for="asset_type" class="form-label">Asset Type</label>
-          <select id="asset_type" name="category" class="form-select"
-                 {% if editing %}disabled{% endif %}>
-            <option value="" disabled selected>Select a type</option>
-            {% for type in types %}
-        <option value="{{ type }}" {% if asset_data.category == type %}selected{% endif %}
-          data-dynamic="{{ 'true' if type not in built_in_types else 'false' }}">
-          {{ type }}
-        </option>
-      {% endfor %}
 
+          <select id="asset_type" name="category" class="form-select">
+            <option value="" disabled selected>Select a type</option>
+            
+            {% for type in types %}
+              <option value="{{ type }}" {% if asset_data.category == type %}selected{% endif %}>
+                {{ type }}
+              </option>
+            {% endfor %}
             <option value="add_new_type">Add New Type</option>
           </select>
+
+          {% if editing %}
+            <!-- 🔑 ensures category is submitted even when select is disabled -->
+            <input type="hidden" name="category" value="{{ asset_data.category }}">
+          {% endif %}
+
           <div class="invalid-feedback" id="category-error"></div>
         </div>
 
@@ -83,12 +88,40 @@
 
 {% if not editing %}
   <script>
-    // 🧹 Clear cached field config to ensure fresh status options on create
+    // Clear cached field config to ensure fresh status options on create
     window.fieldConfigMap = {};
   </script>
 {% endif %}
 
 <script defer src="{{ url_for('main.serve_assets', filename='bundle.js') }}"></script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("asset-form");
+    const submitBtn = document.getElementById("submit-btn");
+    const assetTypeSelect = document.getElementById("asset_type");
+    const dynamicFields = document.getElementById("dynamic-fields");
+
+    if (!form || !dynamicFields) return;
+
+    // Enable submit when dynamic fields are injected
+    const observer = new MutationObserver(() => {
+      const inputs = dynamicFields.querySelectorAll("input, select, textarea");
+      if (inputs.length > 0) {
+        submitBtn.disabled = false;
+      }
+    });
+
+    observer.observe(dynamicFields, { childList: true, subtree: true });
+
+    // IMPORTANT: enable category before submit (disabled fields are not sent)
+    form.addEventListener("submit", () => {
+      if (assetTypeSelect && assetTypeSelect.disabled) {
+        assetTypeSelect.disabled = false;
+      }
+    });
+  });
+</script>
 
 <script>
   document.addEventListener('keydown', function (event) {

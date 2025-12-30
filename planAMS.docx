@@ -3,14 +3,43 @@ change my code accordingly.
 syc my codes with new init_db.py and make the changes to the excel file to add the same:
 
 
-make the add new type working - 26/12
-individual delete buttons - select and drag kela tar should be allowed to be deleted 
-check export excel
-check export keka
-check import excel
-link the excel docuement to system and viceversa - 26/12
+make the add new type working - 26/12 (failed)
+individual delete buttons - select and drag kela tar should be allowed to be deleted - perfect
+check export excel - perfect
+    currency format
+    date format 
+check export keka - perfect
+check import excel - perfect
+link the excel document to system and viceversa - 26/12 (failed)
 
 my drop down for add new asset has "add new type" which gives many features or fields, 
 i select them and the same gets populated as a form and then when i enter save, it should
 get stored in db with its respective features, thus reflect the same on dashboard and when 
 i am viewing the same
+
+
+bundle.js:3113 ✅ Master fields loaded: Array(57)
+bundle.js:127 🔀 Rendering fields for: test1
+bundle.js:162 📦 Fetched config: (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
+bundle.js:163 ✅ Passing data to injectFields: {}
+bundle.js:169 📥 Received data in injectFields: {}
+bundle.js:188 🔎 Matching field: prev_emp -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Previous Employee', name: 'prev_emp', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: username -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Username', name: 'username', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: user_code -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'User Code', name: 'user_code', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: state -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'State', name: 'state', value: '', type: 'select-one', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: amount -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Amount', name: 'amount', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: gst_18 -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'GST (18%)', name: 'gst_18', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: total -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Total', name: 'total', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: given_date -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Given Date', name: 'given_date', value: '', type: 'text', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: status -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Status', name: 'status', value: '', type: 'select-one', hasNameAttr: true}
+bundle.js:188 🔎 Matching field: remarks -> value: undefined
+bundle.js:302 ⬅️ Injecting field: {label: 'Remarks', name: 'remarks', value: '', type: 'text', hasNameAttr: true}
