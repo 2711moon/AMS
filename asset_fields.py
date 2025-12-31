@@ -1,3 +1,5 @@
+# asset_fields.py
+
 PRIORITY_KEYS = [
     "category",
     "prev_emp",
@@ -54,3 +56,82 @@ PRIORITY_KEYS = [
     "status",
     "remarks",
 ]
+
+#FIELD OWNERSHIP RULES
+
+IMMUTABLE_FIELDS = {
+"_id",
+"category",
+"serial_no",
+"imei1",
+"asset_tag",
+"cpu_asset_tag",
+"monitor_asset_tag",
+"it_tag",
+"IT_tagC",
+"IT_tagM",
+"accounts_tag",
+"accounts_tagC",
+"accounts_tagM",
+"created_at", # (not created yet)
+}
+
+SYSTEM_CONTROLLED_FIELDS = {
+"updated_at", # (not created yet)
+"remarks", # (append-only)
+}
+
+USER_EDITABLE_FIELDS = {
+"prev_emp",
+"username", 
+"prev_emp_code",
+"user_code",
+"area_of_collection",
+"area",
+"state",
+"amount",
+"gst_18",
+"gst_22",
+"gst_28",
+"total",
+"purchase_date",
+"prev_given_date",
+"given_date",
+"collected_date",
+"year",
+"Status",
+"remarks",
+"invoice_no",
+"vendor",
+"license",
+"os",
+"model",
+"system_manufacturer",
+"domain",
+"ip_address",
+"processor",
+"ram",
+"courier_by",
+"hdd",
+"endpoint_name",
+"received_on_approval",
+"storage",
+"imei2",
+"employee_code",
+"employee_name",
+"send_by",
+"system_model",
+"received",
+"main_circuit_board",
+"monitor_make",
+"hdd_type",
+"battery_type",
+}
+
+REMARKS_TRIGGER_FIELDS = {
+"status",
+"employee_code",
+"employee_name",
+"area",
+"given_date",
+}
