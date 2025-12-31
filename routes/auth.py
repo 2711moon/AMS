@@ -3,9 +3,8 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, jsonify, make_response
 from werkzeug.security import check_password_hash, generate_password_hash
 from forms import LoginForm
-from extensions import csrf
 from models import users_collection
-
+from extensions import csrf
 
 auth_bp = Blueprint('auth', __name__)
 

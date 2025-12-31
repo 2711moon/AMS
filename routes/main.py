@@ -7,6 +7,7 @@ from forms import AssetForm
 from extensions import csrf, format_inr
 from asset_fields import PRIORITY_KEYS
 import re
+from asset_update_engine import sanitize_asset_update
 from utils import normalize_asset_data, get_master_fields, get_indian_states, get_all_existing_types, normalize_imported_asset
 
 
@@ -490,18 +491,34 @@ def edit_asset(asset_id):
         # Normalize name/category/status/owner (your existing helper)
         raw_data.update(normalize_asset_data(raw_data))
 
-        # Allowed payload only
-        payload = {}
-        for key in allowed_fields:
-            val = raw_data.get(key, "")
-            payload[key] = val
+       # 🔐 Run through update engine
+        try:
+            final_payload, warnings = sanitize_asset_update(
+                old_asset=asset,
+                incoming_data=raw_data,
+                source="ui",
+                force_apply=False   # UI never force-applies silently
+            )
+        except ValueError as e:
+            flash(str(e), "danger")
+            return redirect(request.url)
 
-        payload["category"] = selected_type
+        # ⚠️ If warnings exist, block and show them
+        if warnings:
+            for w in warnings:
+                flash(f"⚠️ {w}", "warning")
+            flash("Fix warnings or confirm override (future feature).", "danger")
+            return redirect(request.url)
 
-        assets_collection.update_one({"_id": ObjectId(asset_id)}, {"$set": payload})
+        # ✅ Apply update
+        assets_collection.update_one(
+            {"_id": ObjectId(asset_id)},
+            {"$set": final_payload}
+        )
 
         flash("Asset updated successfully.", "success")
         return redirect(url_for("main.dashboard"))
+
 
     asset["_id"] = str(asset["_id"])
     return render_template(
