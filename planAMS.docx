@@ -12,34 +12,81 @@ check export keka - perfect
 check import excel - perfect
 link the excel document to system and viceversa - 26/12 (failed)
 
-my drop down for add new asset has "add new type" which gives many features or fields, 
-i select them and the same gets populated as a form and then when i enter save, it should
-get stored in db with its respective features, thus reflect the same on dashboard and when 
-i am viewing the same
+what all fields can change? according to me, object id, category, Serial No., IMEI-1, IT Tag, IT Tag (CPU), IT Tag (MTR),  Accounts tag, 
+Accounts Tag (CPU),  Accounts Tag (MTR), created at and updated at, leaving that aside, everything else can change, out of which just these, 
+after giving go ahead to all kinds of changes (whether date or currency or anything else), only these 5 will get appended to remarks 
+(Status - Employee code - Employee name - Area - Given Date) because it creates a user history whenever any modifications are there to it 
+
+IMMUTABLE
+_id
+category
+serial_no
+imei1
+asset_tag
+cpu_asset_tag
+monitor_asset_tag
+it_tag
+IT_tagC
+IT_tagM
+accounts_tag
+accounts_tagC
+accounts_tagM
+created_at (not created yet)
+
+SYSTEM-CONTROLLED
+updated_at (not created yet)
+remarks (append-only)
+
+USER-EDITABLE (UI + Excel)
+prev_emp
+username
+prev_emp_code
+user_code
+area_of_collection
+area
+state
+amount
+gst_18
+gst_22
+gst_28
+total
+purchase_date
+prev_given_date
+given_date
+collected_date
+year
+Status
+remarks
+invoice_no
+vendor
+license
+os
+model
+system_manufacturer
+domain
+ip_address
+processor
+ram
+courier_by
+hdd
+endpoint_name
+received_on_approval
+storage
+imei2
+employee_code
+employee_name
+send_by
+system_model
+received
+main_circuit_board
+monitor_make
+hdd_type
+battery_type
 
 
-bundle.js:3113 ✅ Master fields loaded: Array(57)
-bundle.js:127 🔀 Rendering fields for: test1
-bundle.js:162 📦 Fetched config: (10) [{…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}, {…}]
-bundle.js:163 ✅ Passing data to injectFields: {}
-bundle.js:169 📥 Received data in injectFields: {}
-bundle.js:188 🔎 Matching field: prev_emp -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Previous Employee', name: 'prev_emp', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: username -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Username', name: 'username', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: user_code -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'User Code', name: 'user_code', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: state -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'State', name: 'state', value: '', type: 'select-one', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: amount -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Amount', name: 'amount', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: gst_18 -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'GST (18%)', name: 'gst_18', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: total -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Total', name: 'total', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: given_date -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Given Date', name: 'given_date', value: '', type: 'text', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: status -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Status', name: 'status', value: '', type: 'select-one', hasNameAttr: true}
-bundle.js:188 🔎 Matching field: remarks -> value: undefined
-bundle.js:302 ⬅️ Injecting field: {label: 'Remarks', name: 'remarks', value: '', type: 'text', hasNameAttr: true}
+REMARK-TRIGGER FIELDS (subset of editable)
+status
+employee_code
+employee_name
+area
+given_date
