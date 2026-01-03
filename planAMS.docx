@@ -1,23 +1,26 @@
 What to do today:
-change my code accordingly. 
-syc my codes with new init_db.py and make the changes to the excel file to add the same:
+change my code accordingly.
 
+I did not get it, but tell me firstly i only had create and edit that played with the excel data, further import and export dealt with the same a little, 
+the new chnages that we are talkign about, they need to be compatible with the ones already existing. i wanted excel and AMS 
+bidirectional syncing where AMS > excel, meaning all the chnages made in AMS will be reflected in excel, and whatever chnages made in excel 
+will be checked and verified by AMS before updating or adding to the asset in AMS, am i right till here? 
 
-make the add new type working - 26/12 (failed)
+make the add new type working - 26/12 (failed), 02/01 - plan to do the same
 individual delete buttons - select and drag kela tar should be allowed to be deleted - perfect
 check export excel - perfect
     currency format
     date format 
 check export keka - perfect
 check import excel - perfect
-link the excel document to system and viceversa - 26/12 (failed)
+link the excel document to system and viceversa - 26/12 (failed), 02/01/26 - currently doing it
 
 what all fields can change? according to me, object id, category, Serial No., IMEI-1, IT Tag, IT Tag (CPU), IT Tag (MTR),  Accounts tag, 
 Accounts Tag (CPU),  Accounts Tag (MTR), created at and updated at, leaving that aside, everything else can change, out of which just these, 
 after giving go ahead to all kinds of changes (whether date or currency or anything else), only these 5 will get appended to remarks 
 (Status - Employee code - Employee name - Area - Given Date) because it creates a user history whenever any modifications are there to it 
 
-IMMUTABLE
+#IMMUTABLE
 _id
 category
 serial_no
@@ -33,11 +36,11 @@ accounts_tagC
 accounts_tagM
 created_at (not created yet)
 
-SYSTEM-CONTROLLED
+#SYSTEM-CONTROLLED
 updated_at (not created yet)
 remarks (append-only)
 
-USER-EDITABLE (UI + Excel)
+#USER-EDITABLE (UI + Excel)
 prev_emp
 username
 prev_emp_code
@@ -84,7 +87,7 @@ hdd_type
 battery_type
 
 
-REMARK-TRIGGER FIELDS (subset of editable)
+#REMARK-TRIGGER FIELDS (subset of editable)
 status
 employee_code
 employee_name

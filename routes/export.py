@@ -16,7 +16,36 @@ from utils import get_fields_for_type, normalize_cell, is_valid_date, is_future_
 from routes.main import safe_to_float, normalize_gst_keys
 from models import assets_collection, asset_types_collection, import_previews_collection
 from init_db import asset_type_fields
+from asset_update_engine import sanitize_asset_update
 
+def header_to_field_key(header: str) -> str:
+    """
+    Convert Excel header to DB field key.
+    Examples:
+    GST (18%) -> gst_18
+    gst_18 -> gst_18
+    Amount -> amount
+    """
+    if not header:
+        return header
+
+    h = str(header).strip()
+    h_low = h.lower()
+
+    # GST (18%)
+    if h_low.startswith("gst") and "(" in h and ")" in h:
+        try:
+            rate = re.search(r"\((\d+)\s*%?\)", h).group(1)
+            return f"gst_{rate}"
+        except Exception:
+            return h_low.replace(" ", "_")
+
+    # gst_18
+    if h_low.startswith("gst_"):
+        return h_low
+
+    # Normal fields
+    return h_low.replace(" ", "_")
 
 export_bp = Blueprint('export', __name__)
 
@@ -298,8 +327,8 @@ def export_excel():
             continue
 
         sheet = wb.create_sheet(title=asset_type[:31])
-        headers = [f["label"] for f in fields]
-        keys = [f["name"] for f in fields]
+        headers = ["__asset_id"] + [f["label"] for f in fields]
+        keys = ["_id"] + [f["name"] for f in fields]
 
         for col_num, header in enumerate(headers, 1):
             cell = sheet.cell(row=1, column=col_num, value=header)
@@ -575,9 +604,11 @@ def import_preview():
         sheet_headers=preview_doc["sheet_headers"],
     )
 
-
 @export_bp.route('/confirm_import', methods=['POST'])
 def confirm_import():
+    inserted = 0
+    updated = 0
+
     preview_id = session.get("preview_id")
     if not preview_id:
         flash("⚠️ No preview found. Please upload a file first.", "danger")
@@ -590,23 +621,10 @@ def confirm_import():
 
     preview_data = preview_doc["preview_data"]
     sheet_headers = preview_doc["sheet_headers"]
-    assets = []
-
-    def header_to_field_key(h):
-        h_low = str(h).lower()
-        if h_low.startswith("gst") and "(" in h and ")" in h:
-            try:
-                rate = re.search(r"\((\d+)\s*%?\)", h).group(1)
-                return f"gst_{rate}"
-            except Exception:
-                return h
-        if h_low.startswith("gst_"):
-            return h_low
-        return h
 
     for row in preview_data:
-        sheet_name = row.get('sheet')
-        headers = sheet_headers.get(sheet_name, list(row['data'].keys()))
+        sheet_name = row.get("sheet")
+        headers = sheet_headers.get(sheet_name, list(row["data"].keys()))
 
         asset_type = asset_types_collection.find_one({"type_name": sheet_name})
         if not asset_type:
@@ -617,7 +635,8 @@ def confirm_import():
         clean_data = OrderedDict()
         for h in headers:
             if h is None:
-                continue  # skip None headers entirely
+                continue
+
             schema_field = next((f for f in asset_type["fields"] if f["label"] == h), None)
             schema_key = schema_field["name"] if schema_field else h
 
@@ -625,30 +644,60 @@ def confirm_import():
             if field_key == h:
                 field_key = schema_key
 
-            v_pretty = row['data'].get(h, None)
+            v_pretty = row["data"].get(h)
 
-            if not v_pretty or (isinstance(v_pretty, str) and v_pretty.strip() == ""):
+            if not v_pretty or (isinstance(v_pretty, str) and not v_pretty.strip()):
                 clean_data[field_key] = None
             else:
                 if "date" in field_key.lower():
                     try:
-                        dt_obj = datetime.strptime(str(v_pretty).strip(), "%d-%m-%Y")
-                        clean_data[field_key] = dt_obj.strftime("%d-%m-%Y")
+                        dt = datetime.strptime(str(v_pretty).strip(), "%d-%m-%Y")
+                        clean_data[field_key] = dt.strftime("%d-%m-%Y")
                     except Exception:
                         clean_data[field_key] = v_pretty
+                elif field_key in ("amount", "total") or field_key.startswith("gst_"):
+                    clean_data[field_key] = safe_to_float(v_pretty, 0.0)
                 else:
-                    if field_key in ("amount", "total") or field_key.startswith("gst_"):
-                        clean_data[field_key] = safe_to_float(v_pretty, 0.0)
-                    else:
-                        clean_data[field_key] = v_pretty
+                    clean_data[field_key] = v_pretty
 
-        # Remove any accidental None keys
         clean_data = {k: v for k, v in clean_data.items() if k is not None}
-
         clean_data = normalize_gst_keys(clean_data)
         clean_data["category"] = sheet_name
-        assets.append(clean_data)
 
+        existing_asset = assets_collection.find_one({
+            "category": sheet_name,
+            "serial_no": clean_data.get("serial_no")
+        })
+
+        if existing_asset:
+            final_payload, _ = sanitize_asset_update(
+                old_asset=existing_asset,
+                incoming_data=clean_data,
+                source="excel",
+                force_apply=True
+            )
+            assets_collection.update_one(
+                {"_id": existing_asset["_id"]},
+                {"$set": final_payload}
+            )
+            updated += 1
+        else:
+            final_payload, _ = sanitize_asset_update(
+                old_asset={},
+                incoming_data=clean_data,
+                source="excel",
+                force_apply=True
+            )
+            assets_collection.insert_one(final_payload)
+            inserted += 1
+
+    flash(f"✅ Import completed: {inserted} added, {updated} updated.", "success")
+
+    import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
+    session.pop("preview_id", None)
+
+    return redirect(url_for("main.dashboard"))
+"""
     if assets:
         assets_collection.insert_many(assets)
         flash(f"✅ Imported {len(assets)} assets.", "success")
@@ -658,7 +707,7 @@ def confirm_import():
     import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
     session.pop("preview_id", None)
 
-    return redirect(url_for('main.dashboard'))
+    return redirect(url_for('main.dashboard')) """
 
 @export_bp.route('/download_errors', methods=['POST'])
 def download_errors():
@@ -763,7 +812,6 @@ def download_fixed():
         mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 
-# === 📥 5. IMPORT MONGODB DATABASE ===========================
 @export_bp.route('/import_db')
 def import_db():
     BACKUP_FOLDER = 'mongo_backups'
