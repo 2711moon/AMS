@@ -20,6 +20,123 @@ Accounts Tag (CPU),  Accounts Tag (MTR), created at and updated at, leaving that
 after giving go ahead to all kinds of changes (whether date or currency or anything else), only these 5 will get appended to remarks 
 (Status - Employee code - Employee name - Area - Given Date) because it creates a user history whenever any modifications are there to it 
 
+//////VERY IMP 
+There are three names for the same field floating around:
+
+Excel header (what the user sees)
+
+Schema label (what asset_types_collection stores)
+
+DB field key (what MongoDB stores)
+
+Issue #3 is about making sure DB keys always win, and the other two are just helpers.
+
+You are mostly correct already — I just wanted to make sure you understand the rule, not force a change.
+
+🧠 The 3-name problem (real example)
+
+Let’s take GST.
+
+In Excel
+GST (18%)
+
+In asset_types_collection
+{
+  "label": "GST (18%)",
+  "name": "gst_18"
+}
+
+In MongoDB (actual stored key)
+"gst_18": 118.00
+
+
+So:
+
+Layer	Value
+Excel header	GST (18%)
+Schema label	GST (18%)
+DB key	gst_18
+🔧 What your code currently does (step-by-step)
+
+In confirm_import you do:
+
+field_key = header_to_field_key(h)
+if field_key == h:
+    field_key = schema_key
+
+Case 1: Header = GST (18%)
+header_to_field_key("GST (18%)") → "gst_18"
+
+
+✔ Correct
+✔ DB key used
+✔ Schema fallback NOT needed
+
+Case 2: Header = Amount
+header_to_field_key("Amount") → "amount"
+
+
+Schema key = "amount"
+
+✔ Still correct
+✔ DB key used
+
+Case 3: Header = something odd (user edited Excel)
+"GST18"
+
+header_to_field_key("GST18") → "gst18"   # not ideal
+field_key == h → False
+
+
+Then fallback kicks in:
+
+field_key = schema_key  # gst_18
+
+
+✔ DB stays clean
+✔ User mistake doesn’t pollute Mongo
+
+✅ So what was the “issue”?
+
+There is NO bug right now.
+
+Issue #3 was simply this rule you must always follow:
+
+MongoDB must ONLY contain canonical field keys
+(like gst_18, amount, serial_no)
+NEVER Excel labels.
+
+Your code already enforces this indirectly via:
+
+header_to_field_key
+
+schema fallback
+
+normalize_gst_keys
+
+So:
+
+🔥 Do you need to change anything now?
+
+NO.
+
+🔒 What you need to remember for future changes
+
+Never save Excel headers directly
+
+Never save schema labels directly
+
+Always resolve → DB key
+
+That’s it.
+
+🧭 Final status after your clarifications
+Issue	Status
+Two Excel exports	✅ Correct design
+Dead code	✅ You’ll remove
+Issue #3	✅ Understood, no change needed
+//////VERY IMP  
+
 #IMMUTABLE
 _id
 category
