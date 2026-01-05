@@ -1,0 +1,6 @@
+flask
+openpyxl
+pandas  
+babel
+schedule
+bson

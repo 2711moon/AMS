@@ -328,7 +328,6 @@ def export_excel():
 
         sheet = wb.create_sheet(title=asset_type[:31])
         headers = ["__asset_id"] + [f["label"] for f in fields]
-        keys = ["_id"] + [f["name"] for f in fields]
 
         for col_num, header in enumerate(headers, 1):
             cell = sheet.cell(row=1, column=col_num, value=header)
@@ -339,7 +338,16 @@ def export_excel():
 
         for row_idx, asset in enumerate(asset_list, start=2):
             normalized_asset = {normalize_gst_key(k): v for k, v in asset.items()}
-            for col_idx, field in enumerate(fields, start=1):
+
+            # FIRST COLUMN: __asset_id
+            sheet.cell(
+                row=row_idx,
+                column=1,
+                value=str(asset.get("_id", ""))
+            ).font = cell_font
+
+            # REST OF FIELDS START FROM COLUMN 2
+            for col_idx, field in enumerate(fields, start=2):
                 key = field.get("name")
                 label = field.get("label")
                 dtype = (field.get("type") or "text").lower()
@@ -664,10 +672,26 @@ def confirm_import():
         clean_data = normalize_gst_keys(clean_data)
         clean_data["category"] = sheet_name
 
-        existing_asset = assets_collection.find_one({
-            "category": sheet_name,
-            "serial_no": clean_data.get("serial_no")
-        })
+        asset_id = clean_data.get("__asset_id")
+
+        clean_data.pop("__asset_id", None)
+
+        existing_asset = None
+
+        if asset_id:
+            try:
+                existing_asset = assets_collection.find_one(
+                    {"_id": ObjectId(asset_id)}
+                )
+            except Exception:
+                existing_asset = None
+
+        # Fallback only if __asset_id is missing
+        if not existing_asset:
+            existing_asset = assets_collection.find_one({
+                "category": sheet_name,
+                "serial_no": clean_data.get("serial_no")
+            })
 
         if existing_asset:
             final_payload, _ = sanitize_asset_update(
@@ -682,6 +706,7 @@ def confirm_import():
             )
             updated += 1
         else:
+            
             final_payload, _ = sanitize_asset_update(
                 old_asset={},
                 incoming_data=clean_data,
