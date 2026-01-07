@@ -491,13 +491,17 @@ def edit_asset(asset_id):
         # Normalize name/category/status/owner (your existing helper)
         raw_data.update(normalize_asset_data(raw_data))
 
-       # 🔐 Run through update engine
+        # REMOVE IMMUTABLE FIELD FROM UI PAYLOAD
+        raw_data.pop("category", None)
+
+       # Run through update engine
         try:
             final_payload, warnings = sanitize_asset_update(
                 old_asset=asset,
                 incoming_data=raw_data,
                 source="ui",
-                force_apply=False   # UI never force-applies silently
+                force_apply=False,   # UI never force-applies silently
+                allowed_fields=allowed_fields
             )
         except ValueError as e:
             flash(str(e), "danger")

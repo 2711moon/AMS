@@ -596,7 +596,7 @@
           <td>${asset.area || "—"}</td>
           <td class="text-center">${asset.status || "—"}</td>
           <td>${
-            ["discard", "repair", "faulty"].includes((asset.status || "").toLowerCase())
+            ["discard", "repair/faulty"].includes((asset.status || "").toLowerCase())
               ? `<strong style="color: red;">${asset.remarks || "—"}</strong>`
               : asset.remarks || "—"
           }</td>

@@ -546,13 +546,62 @@ def import_excel():
             })
 
     # --- Persist preview in Mongo, keep only preview_id in session ---
+        # =========================
+    # STEP 1 — DETECT DELETIONS (PREVIEW ONLY)
+    # =========================
+
+    excel_asset_ids = set()
+
+    for row in preview_data:
+        asset_id = row.get("data", {}).get("__asset_id")
+        if asset_id:
+            try:
+                excel_asset_ids.add(ObjectId(asset_id))
+            except Exception:
+                pass
+
+    affected_categories = {row["sheet"] for row in preview_data}
+
+    ams_assets = list(
+        assets_collection.find(
+            {
+                "category": {"$in": list(affected_categories)},
+                "soft_deleted": {"$ne": True}
+            }
+        )
+    )
+
+    deleted_candidates = []
+
+    for asset in ams_assets:
+        if asset["_id"] not in excel_asset_ids:
+            deleted_candidates.append({
+                "asset_id": str(asset["_id"]),
+                "category": asset.get("category"),
+                "identifier": (
+                    asset.get("serial_no")
+                    or asset.get("it_tag")
+                    or asset.get("accounts_tag")
+                    or asset.get("IT_tagC")
+                    or asset.get("accounts_tagC")
+                    or asset.get("IT_tagM")
+                    or asset.get("accounts_tagM")
+                    or asset.get("imei1")
+                    or "—"
+                ),
+                "reason": "Missing from Excel import"
+            })
+
+    # Persist preview in Mongo
     try:
         preview_doc = {
             "created_at": datetime.utcnow(),
             "sheet_headers": sheet_headers,
             "preview_data": preview_data,
             "error_count": error_count,
+            "deleted_candidates": deleted_candidates
         }
+
         result = import_previews_collection.insert_one(preview_doc)
         session["preview_id"] = str(result.inserted_id)
     except Exception as e:
@@ -610,6 +659,7 @@ def import_preview():
         preview_data=preview_doc["preview_data"],
         error_count=preview_doc["error_count"],
         sheet_headers=preview_doc["sheet_headers"],
+        deleted_candidates=preview_doc.get("deleted_candidates", [])
     )
 
 @export_bp.route('/confirm_import', methods=['POST'])
@@ -629,6 +679,59 @@ def confirm_import():
 
     preview_data = preview_doc["preview_data"]
     sheet_headers = preview_doc["sheet_headers"]
+
+        # =========================
+    # STEP 1 — DETECT DELETIONS
+    # =========================
+
+    # 1️⃣ Collect asset IDs present in Excel
+    excel_asset_ids = set()
+
+    for row in preview_data:
+        asset_id = row.get("data", {}).get("__asset_id")
+        if asset_id:
+            try:
+                excel_asset_ids.add(ObjectId(asset_id))
+            except Exception:
+                pass
+
+    # 2️⃣ Collect AMS assets for affected categories
+    affected_categories = {row["sheet"] for row in preview_data}
+
+    ams_assets = list(
+        assets_collection.find(
+            {
+                "category": {"$in": list(affected_categories)},
+                "soft_deleted": {"$ne": True}
+            },
+            {"_id": 1, "category": 1, "serial_no": 1}
+        )
+    )
+
+    ams_asset_ids = {a["_id"] for a in ams_assets}
+
+    # 3️⃣ Detect deleted assets
+    deleted_asset_ids = ams_asset_ids - excel_asset_ids
+
+    # 4️⃣ Store deletion candidates in preview (NO DB CHANGE YET)
+    deleted_candidates = []
+
+    if deleted_asset_ids:
+        for asset in ams_assets:
+            if asset["_id"] in deleted_asset_ids:
+                deleted_candidates.append({
+                    "_id": str(asset["_id"]),
+                    "category": asset.get("category"),
+                    "serial_no": asset.get("serial_no"),
+                    "reason": "Deleted in Excel"
+                })
+
+    # Attach to preview document
+    if deleted_candidates:
+        import_previews_collection.update_one(
+            {"_id": preview_doc["_id"]},
+            {"$set": {"deleted_candidates": deleted_candidates}}
+        )
 
     for row in preview_data:
         sheet_name = row.get("sheet")
@@ -716,7 +819,34 @@ def confirm_import():
             assets_collection.insert_one(final_payload)
             inserted += 1
 
-    flash(f"✅ Import completed: {inserted} added, {updated} updated.", "success")
+    flash(
+    f"✅ Import completed: {inserted} added, {updated} updated, {soft_deleted} soft-deleted.",
+    "success")
+
+        # =========================
+    # STEP 2 — APPLY SOFT DELETIONS (ON CONFIRM)
+    # =========================
+
+    deleted_candidates = preview_doc.get("deleted_candidates", [])
+
+    soft_deleted = 0
+
+    for d in deleted_candidates:
+        try:
+            assets_collection.update_one(
+                {"_id": ObjectId(d["asset_id"])},
+                {
+                    "$set": {
+                        "soft_deleted": True,
+                        "deleted_at": datetime.utcnow(),
+                        "delete_reason": d.get("reason", "Deleted via Excel import")
+                    }
+                }
+            )
+            soft_deleted += 1
+        except Exception:
+            pass
+
 
     import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
     session.pop("preview_id", None)

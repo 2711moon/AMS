@@ -99,7 +99,7 @@ USER_EDITABLE_FIELDS = {
 "given_date",
 "collected_date",
 "year",
-"Status",
+"status",
 "remarks",
 "invoice_no",
 "vendor",

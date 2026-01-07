@@ -10,6 +10,38 @@
 
     <h2 class="mb-3 text-start">📥 Import Preview</h2>
 
+    {% if deleted_candidates %}
+    <div class="alert alert-danger mt-3">
+      <h5 class="mb-2">⚠ Assets Missing in Excel (Deletion Detected)</h5>
+      <p class="mb-2">
+        The following assets exist in AMS but are <strong>missing from the Excel file</strong>.
+        If you proceed, these assets will be <strong>soft-deleted</strong>.
+      </p>
+
+      <table class="table table-bordered table-sm">
+        <thead class="table-light">
+          <tr>
+            <th>Category</th>
+            <th>Asset ID</th>
+            <th>Identifier</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in deleted_candidates %}
+            <tr style="background-color: #ffcccc;">
+              <td>{{ d.category }}</td>
+              <td><code>{{ d.asset_id }}</code></td>
+              <td>{{ d.identifier }}</td>
+              <td>{{ d.reason }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+
+
     <div class="d-flex gap-2 mb-4 flex-wrap">
       <form method="POST" action="{{ url_for('export.download_errors') }}" class="m-0">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

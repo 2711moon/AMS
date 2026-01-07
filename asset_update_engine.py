@@ -4,7 +4,7 @@ import copy
 
 from asset_fields import (
     IMMUTABLE_FIELDS,
-    SYSTEM_CONTROLLED_FIELDS,
+    SYSTEM_CONTROLLED_FIELDS, #here it is greyed out, idk for ewhat reason, while the remaining are not
     USER_EDITABLE_FIELDS,
     REMARKS_TRIGGER_FIELDS,
 )
@@ -18,16 +18,25 @@ def sanitize_asset_update(
     old_asset: dict,
     incoming_data: dict,
     *,
-    source: str,          # "ui" or "excel"
-    force_apply: bool
+    source: str,
+    force_apply: bool,
+    allowed_fields: list[str]
 ):
+
     warnings = []
     payload = copy.deepcopy(old_asset)
 
     # ---------- IMMUTABLE ENFORCEMENT ----------
     for field in IMMUTABLE_FIELDS:
-        if field in incoming_data and incoming_data[field] != old_asset.get(field):
-            raise ValueError(f"Immutable field modified: {field}")
+        if field in incoming_data and field in old_asset:
+            old_val = old_asset.get(field)
+            new_val = incoming_data.get(field)
+
+            if old_val is None:
+                continue
+
+            if str(old_val).strip().lower() != str(new_val).strip().lower():
+                raise ValueError(f"Immutable field modified: {field}")
 
     # ---------- APPLY USER-EDITABLE ONLY ----------
     for key, value in incoming_data.items():
@@ -76,8 +85,16 @@ def sanitize_asset_update(
 
     # ---------- SYSTEM FIELDS ----------
     payload["updated_at"] = datetime.utcnow()
-
+    
+    # ---------- FINAL FIELD PRUNE (🔥 THIS FIXES GHOST FIELDS) ----------
+    payload = {
+        k: v for k, v in payload.items()
+        if k in allowed_fields
+           or k in IMMUTABLE_FIELDS
+           or k in SYSTEM_CONTROLLED_FIELDS
+    }
+    
     if source == "excel" and warnings and not force_apply:
         return {}, warnings
-
+    
     return payload, warnings
