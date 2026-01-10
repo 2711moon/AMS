@@ -81,7 +81,8 @@ def sanitize_asset_update(
     if changed:
         stamp = datetime.now().strftime("%d-%m-%Y")
         line = f"[{stamp}] " + " | ".join(changed)
-        payload["remarks"] = (old_asset.get("remarks", "") + "\n" + line).strip()
+        existing_remarks = old_asset.get("remarks") or ""
+        payload["remarks"] = (existing_remarks + "\n" + line).strip()
 
     # ---------- SYSTEM FIELDS ----------
     payload["updated_at"] = datetime.utcnow()

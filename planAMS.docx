@@ -20,6 +20,58 @@ Accounts Tag (CPU),  Accounts Tag (MTR), created at and updated at, leaving that
 after giving go ahead to all kinds of changes (whether date or currency or anything else), only these 5 will get appended to remarks 
 (Status - Employee code - Employee name - Area - Given Date) because it creates a user history whenever any modifications are there to it 
 
+WAIT.
+excel has many users, some can make mistakes, like deleting the asset,
+when i import the same in AMS then it will detect the missing asset, it will soft delete the same (because what if i want to reverse it) and if i really want to delete it for real, i can delete it via mongo db.
+now in case of deletion which is done directly in AMS, it directly removes the same from everywhere including mongoDB. 
+
+feviquick - done
+trypophobia - done
+video editing
+
+08-01-2026:
+AMS completiiton
+complete both paper reading - 0601, 0701, 0801
+Template editor - just check if it is working
+keka excel - october to december
+
+Asset name and asset type under that, it should have the name of the asset/category, that is if it is Mobile, then it should show so
+asset id is a little complex, different for every asset/category, that is under Asset id:
+for Mobile : imei1 or imei2 or both if it exists separated by commas, if one exists and the other doesn’t, no trailing commas should be left behind
+for Barcode Scanner: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for Face Machine: serial_no
+for Franchise TAB: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for Franchise Printer: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for Franchise Inv: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for Laptop: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for IP Phones: serial_no
+for Printer: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
+for Desktop: IT_tagC, accounts_tagC, serial_no, IT_tagM, accounts_tagM,  whatever is available, separated commas if more than one exists, and no trailing commas
+for All-in-one: it_tag
+for Mouse: serial_no
+for KBD: serial_no
+for HDD: serial_no
+for Battery: serial_no
+for Headphones:serial_no
+
+under asset description for all assets, it also differs:
+for Mobile : model, ram, whatever is available, separated commas if more than one exists, and no trailing commas
+for Barcode Scanner:model
+for Face Machine: model
+for Franchise TAB: model
+for Franchise Printer:model
+for Franchise Inv:system_model, system_manufacturer, os, processor, ram, hdd, whatever is available, separated commas if more than one exists, and no trailing commas  
+for Laptop:system_model, system_manufacturer, os, processor, ram, hdd, whatever is available, separated commas if more than one exists, and no trailing commas 
+for IP Phones: model
+for Printer:model, ip address, domain, whatever is available, separated commas if more than one exists, and no trailing commas
+for Desktop: system_model, system_manufacturer, main_circuit_board, os,processor, ram, hdd and  monitor_make, whatever is available, separated commas if more than one exists, and no trailing commas
+for All-in-one: system_model, system_manufacturer, main_circuit_board, os,processor, ram, hdd and  ip_address, whatever is available, separated commas if more than one exists, and no trailing commas
+for Mouse: model
+for KBD:model
+for HDD: model and hdd_type, whatever is available, separated commas if more than one exists, and no trailing commas
+for Battery: model and battery type, whatever is available, separated commas if more than one exists, and no trailing commas
+for Headphones:model
+
 //////VERY IMP 
 There are three names for the same field floating around:
 

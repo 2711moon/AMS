@@ -98,90 +98,119 @@ def export_keka():
         except Exception:
             return "-"
 
+    def join_fields(asset, fields):
+        values = []
+        for f in fields:
+            v = str(asset.get(f) or "").strip()
+            if v:
+                values.append(v)
+        return ", ".join(values)
+
     for asset in assets:
+        raw_category = str(asset.get("category") or "").strip()
+        category = raw_category.lower()
+
+        # ===============================
+        # STEP 1 — NAME / TYPE / ID / DESC
+        # ===============================
+        asset_name = raw_category
+        asset_type = raw_category
+        asset_id = "-"
         asset_desc = "-"
-        location = "-"
 
-        asset_name = fmt(str(asset.get("category") or "").strip())
+        # -------- ASSET ID --------
+        if category == "mobile":
+            asset_id = join_fields(asset, ["imei1", "imei2"])
 
-        # ================= DESKTOP =================
-        if asset_name.lower() == "desktop":
-            cpu_tag = (
-                str(asset.get("IT_tagC") or "").strip()
-                or str(asset.get("accounts_tagC") or "").strip()
-                or "-"
-            )
+        elif category == "barcode scanner":
+            asset_id = join_fields(asset, ["it_tag", "accounts_tag", "serial_no"])
 
-            monitor_or_mtr = (
-                str(asset.get("IT_tagM") or "").strip()
-                or str(asset.get("accounts_tagM") or "").strip()
-                or str(asset.get("serial_no") or "").strip()
-                or "-"
-            )
+        elif category == "face machine":
+            asset_id = join_fields(asset, ["serial_no"])
 
-            asset_id = f"{cpu_tag}, {monitor_or_mtr}"
+        elif category in {
+            "franchise tab",
+            "franchise printer",
+            "franchise inv",
+            "laptop",
+            "printer"
+        }:
+            asset_id = join_fields(asset, ["it_tag", "accounts_tag", "serial_no"])
 
-        # ================= LAPTOP =================
-        elif asset_name.lower() == "laptop":
-            asset_id = (
-                str(asset.get("it_tag") or "").strip()
-                or str(asset.get("accounts_tag") or "").strip()
-                or str(asset.get("serial_no") or "").strip()
-                or "-"
-            )
+        elif category == "ip phones":
+            asset_id = join_fields(asset, ["serial_no"])
 
-            manufacturer = str(asset.get("system_manufacturer") or "").strip()
-            model = str(asset.get("system_model") or "").strip()
-            asset_name = ", ".join([m for m in [manufacturer, model] if m]) or asset_name
+        elif category == "desktop":
+            asset_id = join_fields(asset, [
+                "IT_tagC", "accounts_tagC", "serial_no",
+                "IT_tagM", "accounts_tagM"
+            ])
 
-            desc_parts = [
-                str(asset.get("processor") or "").strip(),
-                str(asset.get("ram") or "").strip(),
-                str(asset.get("os") or "").strip(),
-                str(asset.get("hdd") or "").strip(),
-                str(asset.get("license") or "").strip(),
-            ]
-            asset_desc = ", ".join([d for d in desc_parts if d]) or "-"
+        elif category == "all-in-one":
+            asset_id = join_fields(asset, ["it_tag"])
 
-            area = str(asset.get("area") or "").strip()
-            state = str(asset.get("state") or "").strip()
-            location = f"{area} ({state})" if area and state else area or state or "-"
+        elif category in {"mouse", "kbd", "hdd", "battery", "headphones"}:
+            asset_id = join_fields(asset, ["serial_no"])
 
-        # ================= FRANCHISE INV =================
-        elif asset_name.lower() == "franchise inv":
-            asset_id = (
-                str(asset.get("it_tag") or "").strip()
-                or str(asset.get("accounts_tag") or "").strip()
-                or "-"
-            )
+        if not asset_id:
+            asset_id = "-"
 
-        # ================= MOBILE =================
-        elif asset_name.lower() == "mobile":
-            imei1 = str(asset.get("imei1") or "").strip()
-            imei2 = str(asset.get("imei2") or "").strip()
-            asset_id = imei1 or imei2 or "-"
+        # -------- ASSET DESCRIPTION --------
+        if category == "mobile":
+            asset_desc = join_fields(asset, ["model", "ram"])
 
-        # ================= GENERIC =================
-        else:
-            id_fields = [
-                "IT_tagC", "accounts_tagC",
-                "IT_tagM", "accounts_tagM",
-                "it_tag", "accounts_tag",
-                "serial_no"
-            ]
-            asset_id = next((str(asset.get(f) or "").strip() for f in id_fields if asset.get(f)), "-")
+        elif category in {"barcode scanner", "face machine", "franchise tab"}:
+            asset_desc = join_fields(asset, ["model"])
 
-            desc_parts = [
-                str(asset.get("model") or "").strip(),
-                str(asset.get("system_model") or "").strip(),
-                str(asset.get("ram") or "").strip(),
-                str(asset.get("storage") or "").strip()
-            ]
-            asset_desc = "  ".join([p for p in desc_parts if p]) or "-"
+        elif category == "franchise printer":
+            asset_desc = join_fields(asset, ["model"])
 
-            area = str(asset.get("area") or "").strip()
-            state = str(asset.get("state") or "").strip()
-            location = f"{area} ({state})" if area and state else area or state or "-"
+        elif category in {"franchise inv", "laptop"}:
+            asset_desc = join_fields(asset, [
+                "system_model", "system_manufacturer", "os",
+                "processor", "ram", "hdd"
+            ])
+
+        elif category == "ip phones":
+            asset_desc = join_fields(asset, ["model"])
+
+        elif category == "printer":
+            asset_desc = join_fields(asset, ["model", "ip_address", "domain"])
+
+        elif category == "desktop":
+            asset_desc = join_fields(asset, [
+                "system_model", "system_manufacturer",
+                "main_circuit_board", "os",
+                "processor", "ram", "hdd",
+                "monitor_make"
+            ])
+
+        elif category == "all-in-one":
+            asset_desc = join_fields(asset, [
+                "system_model", "system_manufacturer",
+                "main_circuit_board", "os",
+                "processor", "ram", "hdd",
+                "ip_address"
+            ])
+
+        elif category in {"mouse", "kbd", "headphones"}:
+            asset_desc = join_fields(asset, ["model"])
+
+        elif category == "hdd":
+            asset_desc = join_fields(asset, ["model", "hdd_type"])
+
+        elif category == "battery":
+            asset_desc = join_fields(asset, ["model", "battery_type"])
+
+        if not asset_desc:
+            asset_desc = "-"
+
+        # ===============================
+        # EVERYTHING BELOW IS UNCHANGED
+        # ===============================
+        area = str(asset.get("area") or "").strip()
+        state = str(asset.get("state") or "").strip()
+        location = f"{area} ({state})" if area and state else area or state or "-"
 
         asset_category = "IT assets"
         purchase_date = fmt_date(asset.get("purchase_date"))
@@ -208,7 +237,11 @@ def export_keka():
 
         employee_name = str(asset.get("employee_name") or "").strip()
         employee_code = str(asset.get("employee_code") or "").strip()
-        employee_number = f"{employee_name} ({employee_code})" if employee_name and employee_code else employee_name or employee_code or "-"
+        employee_number = (
+            f"{employee_name} ({employee_code})"
+            if employee_name and employee_code
+            else employee_name or employee_code or "-"
+        )
 
         assignment_date = given_date if given_date != "-" else "-"
 
@@ -218,7 +251,7 @@ def export_keka():
             asset_desc,
             location,
             asset_category,
-            asset_name,
+            asset_type,
             purchase_date,
             warranty_expires,
             condition,
@@ -615,6 +648,7 @@ def import_excel():
         preview_data=preview_data,
         error_count=error_count,
         sheet_headers=sheet_headers
+        
     )
 
 @export_bp.route("/import_preview")
@@ -666,25 +700,24 @@ def import_preview():
 def confirm_import():
     inserted = 0
     updated = 0
+    soft_deleted = 0
 
     preview_id = session.get("preview_id")
     if not preview_id:
-        flash("⚠️ No preview found. Please upload a file first.", "danger")
+        flash("⚠️ No preview found.", "danger")
         return redirect(url_for("main.dashboard"))
 
     preview_doc = import_previews_collection.find_one({"_id": ObjectId(preview_id)})
     if not preview_doc:
-        flash("⚠️ Preview expired or not found. Please re-upload.", "danger")
+        flash("⚠️ Preview expired.", "danger")
         return redirect(url_for("main.dashboard"))
 
     preview_data = preview_doc["preview_data"]
     sheet_headers = preview_doc["sheet_headers"]
 
-        # =========================
+    # =========================
     # STEP 1 — DETECT DELETIONS
     # =========================
-
-    # 1️⃣ Collect asset IDs present in Excel
     excel_asset_ids = set()
 
     for row in preview_data:
@@ -695,7 +728,6 @@ def confirm_import():
             except Exception:
                 pass
 
-    # 2️⃣ Collect AMS assets for affected categories
     affected_categories = {row["sheet"] for row in preview_data}
 
     ams_assets = list(
@@ -704,36 +736,45 @@ def confirm_import():
                 "category": {"$in": list(affected_categories)},
                 "soft_deleted": {"$ne": True}
             },
-            {"_id": 1, "category": 1, "serial_no": 1}
+            {"_id": 1, "category": 1, "serial_no": 1,
+             "it_tag": 1, "accounts_tag": 1, "imei1": 1, "imei2": 1}
         )
     )
 
     ams_asset_ids = {a["_id"] for a in ams_assets}
-
-    # 3️⃣ Detect deleted assets
     deleted_asset_ids = ams_asset_ids - excel_asset_ids
 
-    # 4️⃣ Store deletion candidates in preview (NO DB CHANGE YET)
     deleted_candidates = []
 
-    if deleted_asset_ids:
-        for asset in ams_assets:
-            if asset["_id"] in deleted_asset_ids:
-                deleted_candidates.append({
-                    "_id": str(asset["_id"]),
-                    "category": asset.get("category"),
-                    "serial_no": asset.get("serial_no"),
-                    "reason": "Deleted in Excel"
-                })
+    for asset in ams_assets:
+        if asset["_id"] in deleted_asset_ids:
+            deleted_candidates.append({
+                "asset_id": str(asset["_id"]),
+                "category": asset.get("category"),
+                "identifier": (
+                    asset.get("serial_no")
+                    or asset.get("it_tag")
+                    or asset.get("accounts_tag")
+                    or asset.get("imei1")
+                    or asset.get("imei2")
+                    or "—"
+                ),
+                "reason": "Missing from Excel"
+            })
 
-    # Attach to preview document
     if deleted_candidates:
         import_previews_collection.update_one(
             {"_id": preview_doc["_id"]},
             {"$set": {"deleted_candidates": deleted_candidates}}
         )
 
+    # =========================
+    # STEP 2 — INSERT / UPDATE
+    # =========================
     for row in preview_data:
+
+        existing_asset = None   # must exist every loop
+
         sheet_name = row.get("sheet")
         headers = sheet_headers.get(sheet_name, list(row["data"].keys()))
 
@@ -743,7 +784,11 @@ def confirm_import():
             asset_types_collection.insert_one({"type_name": sheet_name, "fields": new_fields})
             asset_type = asset_types_collection.find_one({"type_name": sheet_name})
 
+        allowed_fields = {f["name"] for f in asset_type["fields"]}
+        allowed_fields.add("category")  # ensure category is always allowed
+
         clean_data = OrderedDict()
+
         for h in headers:
             if h is None:
                 continue
@@ -757,8 +802,8 @@ def confirm_import():
 
             v_pretty = row["data"].get(h)
 
-            if not v_pretty or (isinstance(v_pretty, str) and not v_pretty.strip()):
-                clean_data[field_key] = None
+            if v_pretty is None or (isinstance(v_pretty, str) and not v_pretty.strip()):
+                clean_data[field_key] = ""
             else:
                 if "date" in field_key.lower():
                     try:
@@ -771,15 +816,15 @@ def confirm_import():
                 else:
                     clean_data[field_key] = v_pretty
 
-        clean_data = {k: v for k, v in clean_data.items() if k is not None}
         clean_data = normalize_gst_keys(clean_data)
         clean_data["category"] = sheet_name
 
+        #ENSURE SCHEMA COMPLETENESS (CRITICAL)
+        for field in allowed_fields:
+            clean_data.setdefault(field, "")
+
         asset_id = clean_data.get("__asset_id")
-
         clean_data.pop("__asset_id", None)
-
-        existing_asset = None
 
         if asset_id:
             try:
@@ -789,7 +834,6 @@ def confirm_import():
             except Exception:
                 existing_asset = None
 
-        # Fallback only if __asset_id is missing
         if not existing_asset:
             existing_asset = assets_collection.find_one({
                 "category": sheet_name,
@@ -801,7 +845,8 @@ def confirm_import():
                 old_asset=existing_asset,
                 incoming_data=clean_data,
                 source="excel",
-                force_apply=True
+                force_apply=True,
+                allowed_fields=allowed_fields
             )
             assets_collection.update_one(
                 {"_id": existing_asset["_id"]},
@@ -809,49 +854,41 @@ def confirm_import():
             )
             updated += 1
         else:
-            
             final_payload, _ = sanitize_asset_update(
                 old_asset={},
                 incoming_data=clean_data,
                 source="excel",
-                force_apply=True
+                force_apply=True,
+                allowed_fields=allowed_fields
             )
             assets_collection.insert_one(final_payload)
             inserted += 1
 
-    flash(
-    f"✅ Import completed: {inserted} added, {updated} updated, {soft_deleted} soft-deleted.",
-    "success")
 
-        # =========================
-    # STEP 2 — APPLY SOFT DELETIONS (ON CONFIRM)
     # =========================
-
-    deleted_candidates = preview_doc.get("deleted_candidates", [])
-
-    soft_deleted = 0
-
+    # STEP 3 — APPLY SOFT DELETE
+    # =========================
     for d in deleted_candidates:
-        try:
-            assets_collection.update_one(
-                {"_id": ObjectId(d["asset_id"])},
-                {
-                    "$set": {
-                        "soft_deleted": True,
-                        "deleted_at": datetime.utcnow(),
-                        "delete_reason": d.get("reason", "Deleted via Excel import")
-                    }
-                }
-            )
-            soft_deleted += 1
-        except Exception:
-            pass
+        assets_collection.update_one(
+            {"_id": ObjectId(d["asset_id"])},
+            {"$set": {
+                "soft_deleted": True,
+                "deleted_at": datetime.utcnow(),
+                "delete_reason": d["reason"]
+            }}
+        )
+        soft_deleted += 1
 
+    flash(
+        f"✅ Import completed: {inserted} added, {updated} updated, {soft_deleted} soft-deleted.",
+        "success"
+    )
 
     import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
     session.pop("preview_id", None)
 
     return redirect(url_for("main.dashboard"))
+
 """
     if assets:
         assets_collection.insert_many(assets)
