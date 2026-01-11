@@ -734,7 +734,8 @@ def confirm_import():
         assets_collection.find(
             {
                 "category": {"$in": list(affected_categories)},
-                "soft_deleted": {"$ne": True}
+                "soft_deleted": {"$ne": True},
+                "source": "excel" 
             },
             {"_id": 1, "category": 1, "serial_no": 1,
              "it_tag": 1, "accounts_tag": 1, "imei1": 1, "imei2": 1}
@@ -784,61 +785,89 @@ def confirm_import():
             asset_types_collection.insert_one({"type_name": sheet_name, "fields": new_fields})
             asset_type = asset_types_collection.find_one({"type_name": sheet_name})
 
-        allowed_fields = {f["name"] for f in asset_type["fields"]}
-        allowed_fields.add("category")  # ensure category is always allowed
+        master_fields = asset_type_fields.get(sheet_name)
+        if not master_fields:
+            raise ValueError(f"No master schema defined for asset type: {sheet_name}")
 
-        clean_data = OrderedDict()
+        allowed_fields = {f["name"] for f in master_fields}
 
+        # always allowed
+        allowed_fields |= {
+            "category",
+            "source",
+            "updated_at",
+            "remarks",
+        }
+
+
+        clean_data = {}
+
+        # 1. Build FULL schema FIRST
+        for field in master_fields:
+            clean_data[field["name"]] = None
+
+        # 2. Populate from Excel
         for h in headers:
-            if h is None:
+            if not h:
                 continue
 
-            schema_field = next((f for f in asset_type["fields"] if f["label"] == h), None)
-            schema_key = schema_field["name"] if schema_field else h
+            schema_field = next(
+                (f for f in asset_type["fields"] if f["label"] == h),
+                None
+            )
+            if not schema_field:
+                continue
 
-            field_key = header_to_field_key(h)
-            if field_key == h:
-                field_key = schema_key
-
+            field_key = schema_field["name"]
             v_pretty = row["data"].get(h)
 
             if v_pretty is None or (isinstance(v_pretty, str) and not v_pretty.strip()):
-                clean_data[field_key] = ""
-            else:
-                if "date" in field_key.lower():
-                    try:
-                        dt = datetime.strptime(str(v_pretty).strip(), "%d-%m-%Y")
-                        clean_data[field_key] = dt.strftime("%d-%m-%Y")
-                    except Exception:
-                        clean_data[field_key] = v_pretty
-                elif field_key in ("amount", "total") or field_key.startswith("gst_"):
-                    clean_data[field_key] = safe_to_float(v_pretty, 0.0)
-                else:
+                continue
+
+            if "date" in field_key.lower():
+                try:
+                    dt = datetime.strptime(str(v_pretty).strip(), "%d-%m-%Y")
+                    clean_data[field_key] = dt.strftime("%d-%m-%Y")
+                except Exception:
                     clean_data[field_key] = v_pretty
+            elif field_key in ("amount", "total") or field_key.startswith("gst_"):
+                clean_data[field_key] = safe_to_float(v_pretty, 0.0)
+            else:
+                clean_data[field_key] = v_pretty
+
+        # 3. Mandatory fields
+        clean_data["category"] = sheet_name
+        clean_data["source"] = "excel"
 
         clean_data = normalize_gst_keys(clean_data)
         clean_data["category"] = sheet_name
+        
+        for field_name in allowed_fields:
+            if field_name not in clean_data:
+                clean_data[field_name] = None
 
-        #ENSURE SCHEMA COMPLETENESS (CRITICAL)
-        for field in allowed_fields:
-            clean_data.setdefault(field, "")
+        for k in list(clean_data.keys()):
+            if k in ("amount", "total") or k.startswith("gst_"):
+                clean_data[k] = safe_to_float(clean_data.get(k), 0.0)
 
+        # Normalize empty strings to None (AMS never stores "")
+        for k, v in list(clean_data.items()):
+            if isinstance(v, str) and not v.strip():
+                clean_data[k] = None
+                
         asset_id = clean_data.get("__asset_id")
         clean_data.pop("__asset_id", None)
 
+        existing_asset = None
+
+        # ONLY update if Excel explicitly provides __asset_id
         if asset_id:
             try:
                 existing_asset = assets_collection.find_one(
-                    {"_id": ObjectId(asset_id)}
+                    {"_id": ObjectId(asset_id), "soft_deleted": {"$ne": True}}
                 )
             except Exception:
                 existing_asset = None
-
-        if not existing_asset:
-            existing_asset = assets_collection.find_one({
-                "category": sheet_name,
-                "serial_no": clean_data.get("serial_no")
-            })
 
         if existing_asset:
             final_payload, _ = sanitize_asset_update(
@@ -854,14 +883,13 @@ def confirm_import():
             )
             updated += 1
         else:
-            final_payload, _ = sanitize_asset_update(
-                old_asset={},
-                incoming_data=clean_data,
-                source="excel",
-                force_apply=True,
-                allowed_fields=allowed_fields
-            )
-            assets_collection.insert_one(final_payload)
+            clean_data["source"] = "excel"
+            clean_data["updated_at"] = datetime.utcnow()
+            
+            if clean_data.get("remarks"):
+                clean_data["remarks"] = clean_data["remarks"].strip()
+            
+            assets_collection.insert_one(clean_data)
             inserted += 1
 
 
@@ -888,18 +916,6 @@ def confirm_import():
     session.pop("preview_id", None)
 
     return redirect(url_for("main.dashboard"))
-
-"""
-    if assets:
-        assets_collection.insert_many(assets)
-        flash(f"✅ Imported {len(assets)} assets.", "success")
-    else:
-        flash("⚠️ No assets to import.", "warning")
-
-    import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
-    session.pop("preview_id", None)
-
-    return redirect(url_for('main.dashboard')) """
 
 @export_bp.route('/download_errors', methods=['POST'])
 def download_errors():

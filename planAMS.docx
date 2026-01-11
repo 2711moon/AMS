@@ -29,6 +29,21 @@ feviquick - done
 trypophobia - done
 video editing
 
+firstly, excel didn't try to update anything, it was trying to insert completely new data, new row as such, why it tried to update something that doesn't exist i have no idea.
+let me restate some things: 
+creating an asset via AMS or import should save exactly same in the mongoDB, same schema should be reflected in mongoDB, no fields should disappear.
+in view, there is a prefernce for the fields (as in the order in which it will get displayed), that should be maintained in the cases of both
+
+in export excel, the assets created or imported, when exported, should not be any different in exported excel. 
+in export keka, there is a format to which the data from the AMS should adhere to. For every asset, the AMS data is streamlined to fit that column needs. keka is a company we are just giving them the data based on the format they had requested, and then obviously, different than export excel
+
+if inserting completely new data altogether (creating an asset), then checks and everything and if and when i give go ahead, then confirm import (even if it fails some checks)
+if updating some data, then checks and everything and if and when i give go ahead, then confirm import (even if it fails some checks)(let asset id be the the defining factor - an invariable factor)
+
+last time i was in import preview, I was checking the data, then when i opened my mongodb, inside the import previw collection , there was the data ready to be imported as soon as i click on confirm import, but i did not do so; after some while i again uploaded an
+ excel again and tried importing, it took me to import preview and when clicked on confirm import, it showed me this, because import preview collection in DB stores the data for some while, had the data already and that is why it could be taking baout update
+
+
 08-01-2026:
 AMS completiiton
 complete both paper reading - 0601, 0701, 0801

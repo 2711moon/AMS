@@ -347,6 +347,7 @@ def create_asset():
             payload.setdefault(field_name, "")
 
         payload["category"] = selected_type
+        payload["source"] = "ams"
 
         #Normalize status before saving
         if "status" in payload and payload["status"]:
