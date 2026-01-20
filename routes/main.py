@@ -409,17 +409,36 @@ def normalize_gst_keys(asset: dict) -> dict:
 
 @main_bp.route("/edit_asset/<asset_id>", methods=["GET", "POST"])
 def edit_asset(asset_id):
-    asset = assets_collection.find_one({"_id": ObjectId(asset_id)})
-    if not asset:
+    raw_asset = assets_collection.find_one({"_id": ObjectId(asset_id)})
+    if not raw_asset:
         flash("Asset not found.", "danger")
         return redirect(url_for("main.dashboard"))
 
     # Normalize GST keys so we always have gst_XX
-    asset = normalize_gst_keys(asset)
+    asset = normalize_gst_keys(raw_asset.copy())
 
     selected_type = asset.get("category", "")
     config = asset_types_collection.find_one({"type_name": selected_type})
     fields_to_render = config.get("fields", []) if config else []
+
+    #FORCE financial fields into edit form
+    existing_names = {f["name"] for f in fields_to_render}
+
+    for mandatory in ["amount", "total"]:
+        if mandatory not in existing_names:
+            fields_to_render.append({
+                "name": mandatory,
+                "label": mandatory.capitalize()
+            })
+
+    # ensure GST fields also exist if present in DB
+    for k in asset.keys():
+        if k.startswith("gst_") and k not in existing_names:
+            fields_to_render.append({
+                "name": k,
+                "label": f"GST ({k.split('_')[1]}%)"
+            })
+
     allowed_fields = [f["name"] for f in fields_to_render]
 
     # Pre-populate form data
@@ -430,6 +449,8 @@ def edit_asset(asset_id):
         field_name = field["name"]
         field_label = field["label"]
 
+        val = ""
+        
         # Prefer DB key, fallback to label
         raw_val = asset.get(field_name, asset.get(field_label, ""))
 
@@ -451,23 +472,31 @@ def edit_asset(asset_id):
             val = format_inr_no_symbol(amount_numeric)
 
         elif field_name == "total":
-            # Sum all gst_* safely
-            total_gst = 0.0
-            for k, v in asset.items():
-                if isinstance(k, str) and k.startswith("gst_"):
-                    total_gst += safe_to_float(v, 0.0)
-            val_num = amount_numeric + total_gst
-            val = format_inr_no_symbol(val_num)
+            raw_total = safe_to_float(raw_asset.get("total"), 0.0)
+            amount_val = safe_to_float(raw_asset.get("amount"), 0.0)
+            total_locked = raw_asset.get("total_locked", False)
 
-        else:
-            val = "" if raw_val in [None, ""] else raw_val
+            if total_locked:
+                # Invoice / Excel style asset — show DB total as-is
+                val = format_inr_no_symbol(raw_total)
+            else:
+                gst_sum = 0.0
+                for k, v in raw_asset.items():
+                    if isinstance(k, str) and k.startswith("gst_"):
+                        gst_sum += safe_to_float(v, 0.0)
+
+                val = format_inr_no_symbol(amount_val + gst_sum)
 
         populated_data[field_name] = val
 
-    # 🔑 ADD THIS LINE — RIGHT HERE
+    # ADD THIS LINE — RIGHT HERE
     populated_data["category"] = selected_type
 
-    form = AssetForm(data=populated_data)
+    form = AssetForm()
+
+    for field_name, value in populated_data.items():
+        if hasattr(form, field_name):
+            getattr(form, field_name).data = value
 
     if request.method == "POST":
         raw_data = request.form.to_dict()
@@ -484,6 +513,11 @@ def edit_asset(asset_id):
         for money_field in ["amount", "total"]:
             if money_field in raw_data:
                 raw_data[money_field] = safe_to_float(raw_data[money_field], 0.0)
+
+        # Unlock invoice total if user edits amount
+        if raw_asset.get("total_locked"):
+            if safe_to_float(raw_data.get("amount"), 0.0) > 0:
+                raw_data.pop("total_locked", None)
 
         for key in list(raw_data.keys()):
             if key.startswith("gst_"):
@@ -515,7 +549,7 @@ def edit_asset(asset_id):
             flash("Fix warnings or confirm override (future feature).", "danger")
             return redirect(request.url)
 
-        # ✅ Apply update
+        # Apply update
         assets_collection.update_one(
             {"_id": ObjectId(asset_id)},
             {"$set": final_payload}

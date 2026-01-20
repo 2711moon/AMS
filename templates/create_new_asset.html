@@ -154,18 +154,23 @@ function formatIndianNumber(x) {
 }
 
 function updateGSTandTotal() {
+    // NO auto-calculating for invoice-style assets
+    if (window.existingAssetData?.total_locked) {
+        return;
+    }
+
     const amountField = document.getElementById("amount");
     const totalField = document.getElementById("total");
     const gstFields = document.querySelectorAll("input[id^='gst_']");
 
     if (!amountField || !totalField) return;
 
-    const rawAmount = parseFloat(amountField.value.replace(/,/g, "")) || 0; // remove commas only
+    const rawAmount = parseFloat(amountField.value.replace(/,/g, "")) || 0;
 
     let totalGST = 0;
 
     gstFields.forEach(field => {
-        const rate = parseFloat(field.id.replace("gst_", "")); // e.g. gst_18 → 18
+        const rate = parseFloat(field.id.replace("gst_", ""));
         if (!isNaN(rate)) {
             const gstValue = (rawAmount * rate) / 100;
             field.value = formatIndianNumber(gstValue);
@@ -174,8 +179,9 @@ function updateGSTandTotal() {
     });
 
     totalField.value = formatIndianNumber(rawAmount + totalGST);
-    amountField.value = formatIndianNumber(rawAmount); // keep amount formatted too
+    amountField.value = formatIndianNumber(rawAmount);
 }
+
 
 // Attach only to amount
 document.querySelectorAll('input[name="amount"]').forEach(input => {

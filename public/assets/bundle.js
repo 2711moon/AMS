@@ -15,15 +15,6 @@
     return date > today;
   }
 
-  /**
-   * Briefly highlights an input element for visual feedback.
-   * @param {HTMLElement} input
-   */
-  function flashInput(input) {
-    input.classList.add("bg-warning-subtle");
-    setTimeout(() => input.classList.remove("bg-warning-subtle"), 800);
-  }
-
   //currency.js
 
   function attachCurrencyFormat(input, defaultValue = "") {
@@ -72,6 +63,11 @@
   }
 
   function calculateTotal() {
+    // HARD STOP for invoice-style assets
+    if (window.existingAssetData?.total_locked) {
+      return;
+    }
+
     const amountInput = form.querySelector('[name="amount"]');
     const totalInput = form.querySelector('[name="total"]');
     const gstField = [...form.elements].find(el => el.name?.startsWith("gst_"));
@@ -96,11 +92,9 @@
 
     gstField.value = formatCurrency(gstValue);
     gstField.setAttribute("data-value", gstValue.toFixed(2));
-    flashInput(gstField);
 
     totalInput.value = formatCurrency(totalValue);
     totalInput.setAttribute("data-value", totalValue.toFixed(2));
-    flashInput(totalInput);
   }
 
   //globals.js
@@ -310,7 +304,10 @@
       dynamicFieldsContainer.appendChild(wrapper);
     });
 
-    calculateTotal();
+    if (!window.existingAssetData?.total_locked) {
+      calculateTotal();
+  }
+
 
     const hasStatus = config.some(f => f.name === "status");
     const hasRemarks = config.some(f => f.name === "remarks");
@@ -397,62 +394,6 @@
         console.error("Error loading asset types:", err);
       });
   }
-
-  /*export function loadAssetTypes() {
-    const typeSelect = document.getElementById("asset_type");
-    const statusRemarksSection = document.getElementById("status-remarks-section");
-
-    fetch("/get_asset_types")
-      .then(res => res.json())
-      .then(types => {
-        const isEdit = !!window.existingAssetData?.category;
-        const existingType = window.existingAssetData?.category;
-
-        // 🔹 STEP 1: Initialize dropdown correctly
-        if (isEdit) {
-          typeSelect.innerHTML = `
-            <option value="${existingType}" selected>
-              ${existingType}
-            </option>
-          `;
-        } else {
-          typeSelect.innerHTML = `<option disabled selected value="">Select asset type</option>`;
-        }
-
-        // 🔹 STEP 2: Append other types (skip current in edit)
-        types.forEach(type => {
-          if (isEdit && type === existingType) return;
-
-          const opt = document.createElement("option");
-          opt.value = opt.textContent = type;
-          typeSelect.appendChild(opt);
-        });
-
-        // 🔹 STEP 3: Add "Add New Type" ONLY in create mode
-        if (!isEdit) {
-          const newOpt = document.createElement("option");
-          newOpt.value = "add_new_type";
-          newOpt.textContent = "➕ Add New Type";
-          typeSelect.appendChild(newOpt);
-        }
-
-        // 🔹 STEP 4: Render fields + lock dropdown (THIS IS THE RIGHT PLACE)
-        if (isEdit) {
-          typeSelect.value = existingType;
-          typeSelect.disabled = true;
-          typeSelect.classList.add("bg-secondary-subtle");
-          typeSelect.title = "Asset category cannot be changed";
-
-          renderFields(existingType);
-          statusRemarksSection.hidden = false;
-        }
-      })
-      .catch(err => {
-        console.error("Error loading asset types:", err);
-      });
-  }
-
-  */
 
   // 📁 dynamic_form/status-remarks.js
 
@@ -3268,3 +3209,4 @@
   });
 
 })();
+//# sourceMappingURL=bundle.js.map

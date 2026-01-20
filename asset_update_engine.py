@@ -100,16 +100,21 @@ def sanitize_asset_update(
     # - amount = 0, gst = 0, total > 0 IS VALID (Excel invoices)
     # -------------------------------------------------
     amount = normalize_money(payload.get("amount"))
-    gst_total = (
-        normalize_money(payload.get("gst_18")) +
-        normalize_money(payload.get("gst_22")) +
-        normalize_money(payload.get("gst_28"))
-    )
+    gst_18 = normalize_money(payload.get("gst_18"))
+    gst_22 = normalize_money(payload.get("gst_22"))
+    gst_28 = normalize_money(payload.get("gst_28"))
+
+    gst_total = gst_18 + gst_22 + gst_28
     total = normalize_money(payload.get("total"))
 
-    if amount > 0 and gst_total > 0:
-        if abs((amount + gst_total) - total) > 0.5:
-            warnings.append("Amount / GST / Total mismatch")
+    # 🔒 EXCEPTION: Invoice-only total (Excel-style)
+    # amount = 0, gst = 0, total > 0 → VALID, DO NOTHING
+    if amount == 0 and gst_total == 0 and total > 0:
+        pass
+
+    # Normal validation only when amount is provided
+    elif amount > 0 and abs((amount + gst_total) - total) > 0.5:
+        warnings.append("Amount / GST / Total mismatch")
 
     # -------------------------------------------------
     # REMARKS HANDLING

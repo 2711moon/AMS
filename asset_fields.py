@@ -79,6 +79,7 @@ IMMUTABLE_FIELDS = {
 SYSTEM_CONTROLLED_FIELDS = {
 "updated_at", # (not created yet)
 "remarks", # (append-only)
+"total_locked",
 }
 
 USER_EDITABLE_FIELDS = {

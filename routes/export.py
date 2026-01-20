@@ -842,6 +842,19 @@ def confirm_import():
         clean_data = normalize_gst_keys(clean_data)
         clean_data["category"] = sheet_name
         
+        # Detect invoice-style total (Excel-only)
+        amount_val = safe_to_float(clean_data.get("amount"), 0.0)
+
+        gst_sum = 0.0
+        for k, v in clean_data.items():
+            if isinstance(k, str) and k.startswith("gst_"):
+                gst_sum += safe_to_float(v, 0.0)
+
+        total_val = safe_to_float(clean_data.get("total"), 0.0)
+
+        if amount_val == 0 and gst_sum == 0 and total_val > 0:
+            clean_data["total_locked"] = True
+
         for field_name in allowed_fields:
             if field_name not in clean_data:
                 clean_data[field_name] = None

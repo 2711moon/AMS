@@ -47,6 +47,11 @@ function formatCurrency(val) {
 }
 
 export function calculateTotal() {
+  // HARD STOP for invoice-style assets
+  if (window.existingAssetData?.total_locked) {
+    return;
+  }
+
   const amountInput = form.querySelector('[name="amount"]');
   const totalInput = form.querySelector('[name="total"]');
   const gstField = [...form.elements].find(el => el.name?.startsWith("gst_"));
@@ -71,9 +76,7 @@ export function calculateTotal() {
 
   gstField.value = formatCurrency(gstValue);
   gstField.setAttribute("data-value", gstValue.toFixed(2));
-  flashInput(gstField);
 
   totalInput.value = formatCurrency(totalValue);
   totalInput.setAttribute("data-value", totalValue.toFixed(2));
-  flashInput(totalInput);
 }
