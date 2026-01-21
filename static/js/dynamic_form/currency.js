@@ -6,15 +6,20 @@ export function attachCurrencyFormat(input, defaultValue = "") {
   input.placeholder = "0.00";
   input.value = defaultValue;
 
+  input.addEventListener("keydown", (e) => {
+  if (input.name === "amount" && /[0-9.]/.test(e.key)) {
+    window.autoCalcUnlocked = true;
+  }
+});
+
   input.addEventListener("input", () => {
     const raw = input.value.replace(/[^0-9.]/g, "");
     input.setAttribute("data-value", raw);
 
-    if (input.name === "amount") {
+    if (input.name === "amount" && window.autoCalcUnlocked) {
       calculateTotal();
     }
 
-    // 👇 Keep raw input visible while typing (no ₹ here)
     input.value = raw;
   });
 
@@ -47,14 +52,18 @@ function formatCurrency(val) {
 }
 
 export function calculateTotal() {
-  // HARD STOP for invoice-style assets
-  if (window.existingAssetData?.total_locked) {
+  if (window.existingAssetData?.total_locked && !window.autoCalcUnlocked) {
     return;
   }
 
-  const amountInput = form.querySelector('[name="amount"]');
-  const totalInput = form.querySelector('[name="total"]');
-  const gstField = [...form.elements].find(el => el.name?.startsWith("gst_"));
+  const formEl = window.form;
+  if (!formEl) return;
+
+
+  const amountInput = formEl.querySelector('[name="amount"]');
+  const totalInput = formEl.querySelector('[name="total"]');
+  const gstField = [...formEl.elements].find(el => el.name?.startsWith("gst_"));
+
 
   if (!amountInput || !gstField || !totalInput) return;
 

@@ -131,7 +131,7 @@ export function injectFields(config, data = {}) {
       input.name = field.name;
       input.type = "text";
 
-      attachCurrencyFormat(input); // 🟢 Attach plugin first
+      attachCurrencyFormat(input); // Attach plugin first
 
       if (existingValue !== undefined && existingValue !== null && existingValue !== "") {
         const raw = existingValue.toString().replace(/[^0-9.]/g, "");
@@ -141,11 +141,14 @@ export function injectFields(config, data = {}) {
           input.setAttribute("data-value", numeric.toFixed(2));
 
           if (field.name === "amount") {
-            input.value = "";
-            setTimeout(() => {
-              input.value = numeric.toFixed(2);
-              input.dispatchEvent(new Event("input"));
-            }, 0);
+            input.value = numeric.toFixed(2);
+
+            // DO NOT trigger calculation for invoice assets
+            if (!window.existingAssetData?.total_locked) {
+              setTimeout(() => {
+                input.dispatchEvent(new Event("input"));
+              }, 0);
+            }
           } else {
             input.value = numeric.toLocaleString("en-IN", {
               minimumFractionDigits: 2,
@@ -156,6 +159,7 @@ export function injectFields(config, data = {}) {
         }  
 
       if (field.name === "total") input.readOnly = true;
+      if (field.name.startsWith("gst_")) input.readOnly = true;
 
       group.appendChild(prefix);
       group.appendChild(input);

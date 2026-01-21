@@ -84,6 +84,8 @@
   window.existingAssetData = {{ asset_data | default({}) | tojson | safe }};
   window.masterFields = {{ master_fields | default([]) | tojson | safe }};
   window.fieldsToRender = {{ fields_to_render | default([]) | tojson | safe }};
+
+  window.autoCalcUnlocked = !window.existingAssetData?.total_locked;
 </script>
 
 {% if not editing %}
@@ -98,6 +100,8 @@
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("asset-form");
+    window.form = form;
+    
     const submitBtn = document.getElementById("submit-btn");
     const assetTypeSelect = document.getElementById("asset_type");
     const dynamicFields = document.getElementById("dynamic-fields");
@@ -140,6 +144,7 @@
   });
 </script>
 
+<!--
 <script>
 function formatIndianNumber(x) {
     if (isNaN(x)) return "";
@@ -155,9 +160,9 @@ function formatIndianNumber(x) {
 
 function updateGSTandTotal() {
     // NO auto-calculating for invoice-style assets
-    if (window.existingAssetData?.total_locked) {
-        return;
-    }
+     if (!window.autoCalcUnlocked) {
+    return;
+  }
 
     const amountField = document.getElementById("amount");
     const totalField = document.getElementById("total");
@@ -185,8 +190,13 @@ function updateGSTandTotal() {
 
 // Attach only to amount
 document.querySelectorAll('input[name="amount"]').forEach(input => {
-  input.addEventListener('input', updateGSTandTotal);
+  input.addEventListener('input', () => {
+    // user intent detected
+    window.autoCalcUnlocked = true;
+    updateGSTandTotal();
+  });
 });
+
 
 // Make GST fields read-only
 document.querySelectorAll("input[id^='gst_']").forEach(input => {
@@ -195,6 +205,7 @@ document.querySelectorAll("input[id^='gst_']").forEach(input => {
 
 // Initialize on page load
 updateGSTandTotal();
-</script>
+</script> 
+-->
 
 {% endblock %}

@@ -22,15 +22,20 @@
     input.placeholder = "0.00";
     input.value = defaultValue;
 
+    input.addEventListener("keydown", (e) => {
+    if (input.name === "amount" && /[0-9.]/.test(e.key)) {
+      window.autoCalcUnlocked = true;
+    }
+  });
+
     input.addEventListener("input", () => {
       const raw = input.value.replace(/[^0-9.]/g, "");
       input.setAttribute("data-value", raw);
 
-      if (input.name === "amount") {
+      if (input.name === "amount" && window.autoCalcUnlocked) {
         calculateTotal();
       }
 
-      // 👇 Keep raw input visible while typing (no ₹ here)
       input.value = raw;
     });
 
@@ -63,14 +68,18 @@
   }
 
   function calculateTotal() {
-    // HARD STOP for invoice-style assets
-    if (window.existingAssetData?.total_locked) {
+    if (window.existingAssetData?.total_locked && !window.autoCalcUnlocked) {
       return;
     }
 
-    const amountInput = form.querySelector('[name="amount"]');
-    const totalInput = form.querySelector('[name="total"]');
-    const gstField = [...form.elements].find(el => el.name?.startsWith("gst_"));
+    const formEl = window.form;
+    if (!formEl) return;
+
+
+    const amountInput = formEl.querySelector('[name="amount"]');
+    const totalInput = formEl.querySelector('[name="total"]');
+    const gstField = [...formEl.elements].find(el => el.name?.startsWith("gst_"));
+
 
     if (!amountInput || !gstField || !totalInput) return;
 
@@ -241,7 +250,7 @@
         input.name = field.name;
         input.type = "text";
 
-        attachCurrencyFormat(input); // 🟢 Attach plugin first
+        attachCurrencyFormat(input); // Attach plugin first
 
         if (existingValue !== undefined && existingValue !== null && existingValue !== "") {
           const raw = existingValue.toString().replace(/[^0-9.]/g, "");
@@ -251,11 +260,14 @@
             input.setAttribute("data-value", numeric.toFixed(2));
 
             if (field.name === "amount") {
-              input.value = "";
-              setTimeout(() => {
-                input.value = numeric.toFixed(2);
-                input.dispatchEvent(new Event("input"));
-              }, 0);
+              input.value = numeric.toFixed(2);
+
+              // DO NOT trigger calculation for invoice assets
+              if (!window.existingAssetData?.total_locked) {
+                setTimeout(() => {
+                  input.dispatchEvent(new Event("input"));
+                }, 0);
+              }
             } else {
               input.value = numeric.toLocaleString("en-IN", {
                 minimumFractionDigits: 2,
@@ -266,6 +278,7 @@
           }  
 
         if (field.name === "total") input.readOnly = true;
+        if (field.name.startsWith("gst_")) input.readOnly = true;
 
         group.appendChild(prefix);
         group.appendChild(input);
@@ -304,10 +317,7 @@
       dynamicFieldsContainer.appendChild(wrapper);
     });
 
-    if (!window.existingAssetData?.total_locked) {
-      calculateTotal();
-  }
-
+    calculateTotal();
 
     const hasStatus = config.some(f => f.name === "status");
     const hasRemarks = config.some(f => f.name === "remarks");
