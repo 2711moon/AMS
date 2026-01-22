@@ -43,6 +43,8 @@ if updating some data, then checks and everything and if and when i give go ahea
 last time i was in import preview, I was checking the data, then when i opened my mongodb, inside the import previw collection , there was the data ready to be imported as soon as i click on confirm import, but i did not do so; after some while i again uploaded an
  excel again and tried importing, it took me to import preview and when clicked on confirm import, it showed me this, because import preview collection in DB stores the data for some while, had the data already and that is why it could be taking baout update
 
+i get this imag when i clicked on confirm import - this time as well, i changed threee fields in one asset, and i got this, and the asset that i had updated, did not get show any updation, just as before
+
 now for the imported asset in edit mode, the issue arises when amount is 0, so is gst and the total is some number say, 14,000.
 it doesnt populate in edit mode, and when i save it in the end of the edit form, the new value of the total should be 14k,
  i want that if there is just total and the remaining two is 0, there should be an exception to keep it as it is untill one changes amount,
@@ -54,8 +56,21 @@ Template editor - tomorrow
 check the entire import, export and edit flow, and DB a swell for once
 check export and import DB, and if reflects the entire change flow that we agreed upon earlie
 
+i had exported an excel, and imported the same excel with changes in many fields of one asset, thinking it will update the same in AMS. so out of 103 assets
+only one asset was changed, so it was supposed to show me that, instead what i got is in the picture below, plus it doesn't reflect in the AMS.
+There are no duplicates, which is exactly what i wanted, so there is that.
+i will send you what i changed : for mobile - "purchase_date", :vendor", "ram"
+sending the image i get later
 
-Asset name and asset type under that, it should have the name of the asset/category, that is if it is Mobile, then it should show so
+all the changes that i made will go through same checks and everything, as it goes when i import and all
+
+fix 1 and fix 3 overlap, i think so, i will send the codes, check them all, and see if all fixes have been properly applied  
+
+asset id, when exported and importing the same excel with asset ids, it should update, modify, change or delete (just soft delete - not visible in AMS, only in database i.e. mongo db) 
+the respective asset, not create a new asset in AMS
+hard delete - directly from AMS - any asset whether its source is excel or ams, and is nowhere to be found in ams or excel
+soft delete - only for those assets whose source is "excel", exists in db 
+
 asset id is a little complex, different for every asset/category, that is under Asset id:
 for Mobile : imei1 or imei2 or both if it exists separated by commas, if one exists and the other doesn’t, no trailing commas should be left behind
 for Barcode Scanner: it_tag or accounts_tag or serial_no, whatever is available, separated commas if more than one exists, and no trailing commas
@@ -576,3 +591,8 @@ export function flashInput(input) {
   input.classList.add("bg-warning-subtle");
   setTimeout(() => input.classList.remove("bg-warning-subtle"), 800);
 }
+
+
+when i export the excel, it has some asset id assigned to every asset, and if i make chanegs in that exported excel , and import the same again, seeing that asset ids match, it should update them if possible or raise errors, not add it as new assets, what isz the point of asset id otherwise
+
+i want to join from today till the start of february, but i wanted mornings. february, i am not here.  so i wanted to ask if you can adjust 3.5k for the next 10 days, i will pay the adjusted amount for those days. This way i can join and see if the evening session suits me and not wait to comeback in february

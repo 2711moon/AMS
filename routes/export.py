@@ -567,6 +567,20 @@ def import_excel():
                     except Exception:
                         errors[header] = "Invalid date format"
 
+            # =========================
+            # FIX 2 — ASSET ID VALIDATION (PREVIEW)
+            # =========================
+            asset_id = row_data.get("__asset_id")
+
+            if asset_id:
+                try:
+                    # must be valid ObjectId AND must exist
+                    if not assets_collection.find_one({"_id": ObjectId(asset_id)}):
+                        errors["__asset_id"] = "Asset ID not found in system"
+                except Exception:
+                    errors["__asset_id"] = "Invalid Asset ID format"
+
+
             if errors:
                 error_count += 1
 
@@ -599,6 +613,7 @@ def import_excel():
         assets_collection.find(
             {
                 "category": {"$in": list(affected_categories)},
+                "source": "excel", 
                 "soft_deleted": {"$ne": True}
             }
         )
@@ -701,6 +716,8 @@ def confirm_import():
     inserted = 0
     updated = 0
     soft_deleted = 0
+    unchanged = 0
+    skipped = []   # <-- NEW
 
     preview_id = session.get("preview_id")
     if not preview_id:
@@ -734,7 +751,6 @@ def confirm_import():
         assets_collection.find(
             {
                 "category": {"$in": list(affected_categories)},
-                "soft_deleted": {"$ne": True},
                 "source": "excel" 
             },
             {"_id": 1, "category": 1, "serial_no": 1,
@@ -774,8 +790,6 @@ def confirm_import():
     # =========================
     for row in preview_data:
 
-        existing_asset = None   # must exist every loop
-
         sheet_name = row.get("sheet")
         headers = sheet_headers.get(sheet_name, list(row["data"].keys()))
 
@@ -787,26 +801,16 @@ def confirm_import():
 
         master_fields = asset_type_fields.get(sheet_name)
         if not master_fields:
-            raise ValueError(f"No master schema defined for asset type: {sheet_name}")
+            continue   # safer than raising now
 
         allowed_fields = {f["name"] for f in master_fields}
+        allowed_fields |= {"category", "source", "updated_at", "remarks"}
 
-        # always allowed
-        allowed_fields |= {
-            "category",
-            "source",
-            "updated_at",
-            "remarks",
-        }
+        # -------------------------
+        # Build clean_data
+        # -------------------------
+        clean_data = {f["name"]: None for f in master_fields}
 
-
-        clean_data = {}
-
-        # 1. Build FULL schema FIRST
-        for field in master_fields:
-            clean_data[field["name"]] = None
-
-        # 2. Populate from Excel
         for h in headers:
             if not h:
                 continue
@@ -821,7 +825,7 @@ def confirm_import():
             field_key = schema_field["name"]
             v_pretty = row["data"].get(h)
 
-            if v_pretty is None or (isinstance(v_pretty, str) and not v_pretty.strip()):
+            if not v_pretty or (isinstance(v_pretty, str) and not v_pretty.strip()):
                 continue
 
             if "date" in field_key.lower():
@@ -835,54 +839,48 @@ def confirm_import():
             else:
                 clean_data[field_key] = v_pretty
 
-        # 3. Mandatory fields
         clean_data["category"] = sheet_name
         clean_data["source"] = "excel"
-
         clean_data = normalize_gst_keys(clean_data)
-        clean_data["category"] = sheet_name
-        
-        # Detect invoice-style total (Excel-only)
-        amount_val = safe_to_float(clean_data.get("amount"), 0.0)
-
-        gst_sum = 0.0
-        for k, v in clean_data.items():
-            if isinstance(k, str) and k.startswith("gst_"):
-                gst_sum += safe_to_float(v, 0.0)
-
-        total_val = safe_to_float(clean_data.get("total"), 0.0)
-
-        if amount_val == 0 and gst_sum == 0 and total_val > 0:
-            clean_data["total_locked"] = True
-
-        for field_name in allowed_fields:
-            if field_name not in clean_data:
-                clean_data[field_name] = None
 
         for k in list(clean_data.keys()):
             if k in ("amount", "total") or k.startswith("gst_"):
                 clean_data[k] = safe_to_float(clean_data.get(k), 0.0)
-
-        # Normalize empty strings to None (AMS never stores "")
-        for k, v in list(clean_data.items()):
-            if isinstance(v, str) and not v.strip():
+            elif isinstance(clean_data[k], str) and not clean_data[k].strip():
                 clean_data[k] = None
-                
-        asset_id = clean_data.get("__asset_id")
-        clean_data.pop("__asset_id", None)
 
+        # -------------------------
+        # Asset identity
+        # -------------------------
+        asset_id = row["data"].get("__asset_id")
         existing_asset = None
 
-        # ONLY update if Excel explicitly provides __asset_id
         if asset_id:
             try:
                 existing_asset = assets_collection.find_one(
-                    {"_id": ObjectId(asset_id), "soft_deleted": {"$ne": True}}
+                    {"_id": ObjectId(asset_id)}
                 )
             except Exception:
                 existing_asset = None
 
-        if existing_asset:
+            if not existing_asset:
+                skipped.append({
+                    "sheet": sheet_name,
+                    "row": row.get("row"),
+                    "asset_id": asset_id,
+                    "reason": "Asset not found or already soft-deleted"
+                })
+                continue
+
+            if existing_asset.get("category") != sheet_name:
+                skipped.append({
+                    "sheet": sheet_name,
+                    "row": row.get("row"),
+                    "asset_id": asset_id,
+                    "reason": f"Category mismatch: belongs to {existing_asset.get('category')}"
+                })
+                continue
+
             final_payload, _ = sanitize_asset_update(
                 old_asset=existing_asset,
                 incoming_data=clean_data,
@@ -890,20 +888,37 @@ def confirm_import():
                 force_apply=True,
                 allowed_fields=allowed_fields
             )
-            assets_collection.update_one(
+
+            final_payload["soft_deleted"] = False
+            final_payload.pop("deleted_at", None)
+            final_payload.pop("delete_reason", None)
+
+            result = assets_collection.update_one(
                 {"_id": existing_asset["_id"]},
                 {"$set": final_payload}
             )
-            updated += 1
+
+            if result.modified_count > 0:
+                updated += 1
+            else:
+                unchanged += 1
+                
+            # prevent re-soft-delete of revived asset
+            deleted_candidates = [
+                d for d in deleted_candidates
+                if d["asset_id"] != str(existing_asset["_id"])
+            ]
+
         else:
-            clean_data["source"] = "excel"
+            clean_data["created_at"] = datetime.utcnow()
             clean_data["updated_at"] = datetime.utcnow()
-            
+
             if clean_data.get("remarks"):
                 clean_data["remarks"] = clean_data["remarks"].strip()
-            
+
             assets_collection.insert_one(clean_data)
             inserted += 1
+
 
 
     # =========================
@@ -920,10 +935,25 @@ def confirm_import():
         )
         soft_deleted += 1
 
-    flash(
-        f"✅ Import completed: {inserted} added, {updated} updated, {soft_deleted} soft-deleted.",
-        "success"
-    )
+    if skipped:
+        flash(
+            f"⚠️ Import completed with warnings: "
+            f"{inserted} added, {updated} updated, "
+            f"{soft_deleted} soft-deleted, "
+            f"{len(skipped)} skipped.",
+            "warning"
+        )
+
+        # Optional: store skipped details for dashboard view
+        session["import_warnings"] = skipped
+
+    else:
+        flash(
+            f"✅ Import completed successfully: "
+            f"{inserted} added, {updated} updated, "
+            f"{soft_deleted} soft-deleted.",
+            "success"
+        )
 
     import_previews_collection.delete_one({"_id": ObjectId(preview_id)})
     session.pop("preview_id", None)
